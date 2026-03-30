@@ -67,12 +67,27 @@ import { MatchLogic } from './MatchLogic';
 import { ScoreSystem } from './ScoreSystem';
 import { TimerService } from './TimerService';
 
+// HIGH FIX #4: 游戏结束回调类型
+export type GameEndCallback = (result: GameResult) => void | Promise<void>;
+
 export class GameEngine {
   private state: GameState;
   private config: GameConfig | null = null;
   private matchLogic: MatchLogic;
   private scoreSystem: ScoreSystem;
   private timerService: TimerService;
+
+  // 键盘去重相关 (CRITICAL FIX #3)
+  private lastKeyPressTime = 0;
+  private lastKeyPressKey = '';
+  private static readonly KEY_DEBOUNCE_MS = 50; // 防抖阈值
+
+  // 轨道终点检测相关 (CRITICAL FIX #1)
+  private static readonly TRACK_END_Y = 100; // 轨道终点百分比
+  private letterCheckInterval: NodeJS.Timeout | null = null;
+
+  // 游戏结束回调 (HIGH FIX #4)
+  private onGameEndCallback: GameEndCallback | null = null;
 
   constructor() {
     this.matchLogic = new MatchLogic();
@@ -81,32 +96,52 @@ export class GameEngine {
     this.state = this.createInitialState();
   }
 
+  /**
+   * 设置游戏结束回调 (HIGH FIX #4)
+   * 用于在游戏结束时保存记录
+   */
+  setOnGameEndCallback(callback: GameEndCallback): void {
+    this.onGameEndCallback = callback;
+  }
+
   // 生命周期方法
   start(config: GameConfig): void {
     this.config = config;
     this.state = this.createInitialState();
     this.timerService.start(config.duration, this.onTimeUp.bind(this));
     this.spawnLetter();
+    this.startGameLoop(); // CRITICAL FIX #1: 启动游戏循环
   }
 
   pause(): void {
     this.state.status = 'paused';
     this.timerService.pause();
+    this.stopGameLoop(); // 暂停时停止游戏循环
   }
 
   resume(): void {
     this.state.status = 'playing';
     this.timerService.resume();
+    this.startGameLoop(); // 恢复时重启游戏循环
   }
 
   stop(): void {
     this.state.status = 'gameover';
     this.timerService.stop();
+    this.stopGameLoop(); // CRITICAL FIX #1: 停止游戏循环
   }
 
-  // 输入处理
+  // 输入处理 (带键盘去重 - CRITICAL FIX #3)
   handleKeyPress(key: string): void {
     if (this.state.status !== 'playing') return;
+
+    // 键盘去重逻辑：防止按住键时连续触发
+    const now = Date.now();
+    if (key === this.lastKeyPressKey && now - this.lastKeyPressTime < GameEngine.KEY_DEBOUNCE_MS) {
+      return; // 去重：忽略 50ms 内的重复按键
+    }
+    this.lastKeyPressTime = now;
+    this.lastKeyPressKey = key;
 
     const result = this.matchLogic.check(
       key,
@@ -125,22 +160,130 @@ export class GameEngine {
   // 内部方法
   private spawnLetter(): void {
     // 根据难度生成字母
+    if (!this.config) return;
+
+    const difficultyManager = new DifficultyManager();
+    const targetChar = difficultyManager.generateTarget(
+      this.getVocabulary(),
+      this.config.difficulty,
+      this.config.mode
+    );
+
+    const letter: FallingLetter = {
+      id: crypto.randomUUID(),
+      char: targetChar,
+      x: Math.random() * 80 + 10, // 10%-90% 横向位置
+      y: 0, // 从顶部开始
+      speed: this.getLetterSpeed(),
+      createdAt: Date.now()
+    };
+
+    this.state.fallingLetters.push(letter);
+  }
+
+  /**
+   * 检查字母是否到达轨道终点 (CRITICAL FIX #1)
+   * FRD-004-R5: 字母到达终点前未输入，判定为 Miss
+   */
+  private checkLetterReachedEnd(): void {
+    const lettersToRemove: string[] = [];
+
+    for (const letter of this.state.fallingLetters) {
+      if (letter.y >= GameEngine.TRACK_END_Y) {
+        // 字母到达终点，判定为 Miss
+        this.scoreSystem.addMiss();
+        this.state.missCount++;
+        this.state.combo = 0; // 重置连击
+        lettersToRemove.push(letter.id);
+      }
+    }
+
+    // 移除到达终点的字母
+    this.state.fallingLetters = this.state.fallingLetters.filter(
+      l => !lettersToRemove.includes(l.id)
+    );
+  }
+
+  /**
+   * 更新字母位置 (CRITICAL FIX #1)
+   */
+  private updateLetterPositions(): void {
+    for (const letter of this.state.fallingLetters) {
+      // 根据速度更新 Y 坐标 (每帧移动)
+      letter.y += (letter.speed / 16); // 假设 60fps
+    }
+    this.checkLetterReachedEnd();
+  }
+
+  /**
+   * 启动游戏循环 (CRITICAL FIX #1)
+   */
+  private startGameLoop(): void {
+    // 每 16ms 更新一次 (约 60fps)
+    this.letterCheckInterval = setInterval(() => {
+      if (this.state.status === 'playing') {
+        this.updateLetterPositions();
+      }
+    }, 16);
+  }
+
+  private stopGameLoop(): void {
+    if (this.letterCheckInterval) {
+      clearInterval(this.letterCheckInterval);
+      this.letterCheckInterval = null;
+    }
   }
 
   private handleMatchSuccess(result: MatchResult): void {
     this.scoreSystem.addCorrect();
     this.state.combo = this.scoreSystem.getCombo();
-    // 更新状态...
+    this.state.correctCount++;
+    this.state.score = this.scoreSystem.getStats().score;
+    // 移除已匹配的字母
+    if (result.isComplete && this.state.fallingLetters.length > 0) {
+      this.state.fallingLetters.shift();
+    }
   }
 
   private handleMatchFailure(): void {
     this.scoreSystem.addError();
-    // 播放错误反馈...
+    this.state.errorCount++;
+    // 播放错误反馈（由 UI 层处理）
   }
 
   private onTimeUp(): void {
     this.stop();
-    // 触发游戏结束事件
+    // HIGH FIX #4: 触发游戏结束回调，保存记录
+    this.triggerGameEnd();
+  }
+
+  /**
+   * 触发游戏结束事件并保存记录 (HIGH FIX #4)
+   */
+  private async triggerGameEnd(): Promise<void> {
+    const result = this.getResult();
+    if (this.onGameEndCallback) {
+      await this.onGameEndCallback(result);
+    }
+  }
+
+  /**
+   * 获取当前字库的词汇表
+   */
+  private getVocabulary(): string[] {
+    // 从字库获取词汇，此处为伪代码
+    // 实际实现需要从 repository 读取
+    return [];
+  }
+
+  /**
+   * 根据速度配置获取字母下落速度
+   */
+  private getLetterSpeed(): number {
+    if (!this.config) return 20;
+    // 速度等级：1=超慢，2=慢，3=中，4=快
+    const speedMap: Record<number, number> = { 1: 10, 2: 20, 3: 40, 4: 80 };
+    return speedMap[this.config.speed] || 20;
   }
 
   private createInitialState(): GameState {
@@ -634,12 +777,15 @@ export class TimerService {
 /**
  * 计算 WPM (Words Per Minute)
  * 标准：5 个字符 = 1 个单词
+ *
+ * HIGH FIX #6: 参数名从 durationSeconds 改为 elapsedSeconds
+ * 因为游戏过程中 WPM 是实时计算的，应该使用"已用时间"而非"总时长"
  */
-export function calculateWPM(correctChars: number, durationSeconds: number): number {
-  if (durationSeconds <= 0) return 0;
+export function calculateWPM(correctChars: number, elapsedSeconds: number): number {
+  if (elapsedSeconds <= 0) return 0;
 
   const words = correctChars / 5;
-  const minutes = durationSeconds / 60;
+  const minutes = elapsedSeconds / 60;
 
   return Math.round(words / minutes);
 }
@@ -652,6 +798,210 @@ export function calculateAccuracy(correct: number, errors: number): number {
   if (total === 0) return 1;
 
   return Math.round((correct / total) * 100) / 100;
+}
+```
+
+---
+
+### 2.8 音频管理器 (AudioManager) - HIGH FIX #5
+
+**职责**: 管理游戏音效播放，支持音量控制和静音模式
+
+```typescript
+// src/utils/AudioManager.ts
+
+export type SoundType = 'correct' | 'error' | 'combo' | 'levelup';
+
+export interface AudioConfig {
+  volume: number;        // 0.0 - 1.0
+  muted: boolean;
+  soundEnabled: boolean; // 用户开关
+}
+
+export class AudioManager {
+  private config: AudioConfig;
+  private audioElements: Map<SoundType, HTMLAudioElement>;
+  private isInitialized: boolean = false;
+
+  constructor() {
+    this.config = {
+      volume: 0.6,
+      muted: false,
+      soundEnabled: true
+    };
+    this.audioElements = new Map();
+  }
+
+  /**
+   * 初始化音频管理器
+   * 预加载所有音效文件
+   */
+  initialize(): void {
+    if (this.isInitialized) return;
+
+    // FRD-009: 四种音效
+    const soundFiles: Record<SoundType, string> = {
+      correct: '/audio/correct.mp3',    // 清脆高音，0.2s
+      error: '/audio/error.mp3',        // 低沉提示，0.3s
+      combo: '/audio/combo.mp3',        // 胜利音效，0.5s
+      levelup: '/audio/levelup.mp3'     // 庆祝音效，1.0s
+    };
+
+    for (const [type, file] of Object.entries(soundFiles)) {
+      const audio = new Audio(file);
+      audio.preload = 'auto';
+      this.audioElements.set(type as SoundType, audio);
+    }
+
+    this.isInitialized = true;
+  }
+
+  /**
+   * 播放音效
+   * @param type - 音效类型
+   * @param override - 是否覆盖静音设置（用于测试）
+   */
+  play(type: SoundType, override: boolean = false): void {
+    if (!this.isInitialized) {
+      this.initialize();
+    }
+
+    // 检查是否允许播放
+    if (!override && (this.config.muted || !this.config.soundEnabled)) {
+      return;
+    }
+
+    const audio = this.audioElements.get(type);
+    if (audio) {
+      audio.currentTime = 0; // 从头播放
+      audio.volume = this.config.volume;
+
+      // 处理播放失败（如浏览器自动播放限制）
+      audio.play().catch(err => {
+        console.warn(`Audio play failed: ${type}`, err);
+      });
+    }
+  }
+
+  /**
+   * 播放正确音效
+   */
+  playCorrect(): void {
+    this.play('correct');
+  }
+
+  /**
+   * 播放错误音效
+   */
+  playError(): void {
+    this.play('error');
+  }
+
+  /**
+   * 播放连击音效
+   */
+  playCombo(): void {
+    this.play('combo');
+  }
+
+  /**
+   * 播放升级音效
+   */
+  playLevelUp(): void {
+    this.play('levelup');
+  }
+
+  /**
+   * 设置音量
+   * @param volume - 0.0 到 1.0
+   */
+  setVolume(volume: number): void {
+    this.config.volume = Math.max(0, Math.min(1, volume));
+  }
+
+  /**
+   * 设置静音
+   */
+  setMuted(muted: boolean): void {
+    this.config.muted = muted;
+  }
+
+  /**
+   * 设置音效开关
+   */
+  setSoundEnabled(enabled: boolean): void {
+    this.config.soundEnabled = enabled;
+  }
+
+  /**
+   * 获取当前配置
+   */
+  getConfig(): AudioConfig {
+    return { ...this.config };
+  }
+
+  /**
+   * 清理资源
+   */
+  dispose(): void {
+    for (const audio of this.audioElements.values()) {
+      audio.pause();
+      audio.src = '';
+    }
+    this.audioElements.clear();
+    this.isInitialized = false;
+  }
+}
+
+// 单例模式
+let audioManagerInstance: AudioManager | null = null;
+
+export function getAudioManager(): AudioManager {
+  if (!audioManagerInstance) {
+    audioManagerInstance = new AudioManager();
+  }
+  return audioManagerInstance;
+}
+```
+
+**音效规格**（FRD-009）:
+
+| 类型 | 文件名 | 时长 | 音量 | 描述 |
+|-----|-------|------|------|------|
+| correct | correct.mp3 | 0.2s | 60% | 清脆高音，正确输入时 |
+| error | error.mp3 | 0.3s | 50% | 低沉提示，错误输入时 |
+| combo | combo.mp3 | 0.5s | 70% | 胜利音效，连击达成时 |
+| levelup | levelup.mp3 | 1.0s | 70% | 庆祝音效，升级时 |
+
+**备选方案**（风险缓解）:
+
+```typescript
+// 如果音频文件加载失败，使用 Web Audio API 生成简单音效
+function generateFallbackSound(type: SoundType): void {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(ctx.destination);
+
+  switch (type) {
+    case 'correct':
+      oscillator.frequency.value = 800; // 高音
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+      ctx.currentTime += 0.2;
+      break;
+    case 'error':
+      oscillator.frequency.value = 200; // 低音
+      oscillator.type = 'square';
+      gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+      ctx.currentTime += 0.3;
+      break;
+  }
+
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.5);
 }
 ```
 
@@ -688,6 +1038,20 @@ interface GameStore {
   getTimeRemaining: () => string;
 }
 
+// HIGH FIX #4: 游戏结束回调集成
+async function saveGameRecord(result: GameResult): Promise<void> {
+  const { recordRepository } = await import('@/repositories/recordRepository');
+
+  const record: GameRecord = {
+    id: crypto.randomUUID(),
+    config: get().config!,
+    result,
+    timestamp: Date.now()
+  };
+
+  await recordRepository.save(record);
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   gameState: {
     status: 'idle',
@@ -709,6 +1073,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startGame: (config) => {
     const engine = new GameEngine();
+
+    // HIGH FIX #4: 设置游戏结束回调，自动保存记录
+    engine.setOnGameEndCallback(async (result) => {
+      await saveGameRecord(result);
+    });
+
     engine.start(config);
 
     set({
@@ -1086,6 +1456,63 @@ import { Repository } from './types';
 
 const STORE_PREFIX = 'library_';
 
+// CRITICAL FIX #2: 字库验证函数
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+/**
+ * 验证字库数据的有效性 (FRD-002-R3, FRD-002-R4)
+ */
+export function validateWordLibrary(data: unknown): ValidationResult {
+  const errors: string[] = [];
+
+  // 1. JSON 结构验证
+  if (!data || typeof data !== 'object') {
+    return { isValid: false, errors: ['无效的 JSON 格式'] };
+  }
+
+  const lib = data as Partial<WordLibrary>;
+
+  // 2. 必填字段验证
+  if (!lib.name || typeof lib.name !== 'string') {
+    errors.push('缺少必填字段：name');
+  } else if (lib.name.length > 50) {
+    errors.push('字库名称不能超过 50 个字符');
+  }
+
+  if (!lib.characters || !Array.isArray(lib.characters)) {
+    errors.push('缺少必填字段：characters');
+  } else {
+    // 3. 字符数量验证 (FRD-002-R4: 最多 500 个)
+    if (lib.characters.length > 500) {
+      errors.push('字库最多包含 500 个字符/单词');
+    }
+
+    // 4. 字符类型验证 (FRD-002-R2: 只允许字母和基本标点)
+    const validCharRegex = /^[a-zA-Z\s.,!?;:'"-]+$/;
+    for (let i = 0; i < lib.characters.length; i++) {
+      const char = lib.characters[i];
+      if (typeof char !== 'string') {
+        errors.push(`第 ${i + 1} 个字符必须是字符串类型`);
+      } else if (!validCharRegex.test(char)) {
+        errors.push(`第 ${i + 1} 个字符包含非法字符：${char}`);
+      }
+    }
+  }
+
+  // 5. 类型一致性验证
+  if (lib.type && !['letter', 'word'].includes(lib.type)) {
+    errors.push('type 字段必须是 "letter" 或 "word"');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 export const libraryRepository: Repository<WordLibrary> = {
   async getAll(): Promise<WordLibrary[]> {
     const keys = await localforage.keys();
@@ -1101,12 +1528,43 @@ export const libraryRepository: Repository<WordLibrary> = {
   },
 
   async save(library: WordLibrary): Promise<void> {
+    // 保存前验证 (CRITICAL FIX #2)
+    const result = validateWordLibrary(library);
+    if (!result.isValid) {
+      throw new LibraryError('字库验证失败', result.errors);
+    }
+
     library.updatedAt = Date.now();
     await localforage.setItem(STORE_PREFIX + library.id, library);
   },
 
   async delete(id: string): Promise<void> {
     await localforage.removeItem(STORE_PREFIX + id);
+  },
+
+  /**
+   * 导入字库（带验证）(CRITICAL FIX #2)
+   */
+  async import(json: string): Promise<WordLibrary> {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(json);
+    } catch (e) {
+      throw new LibraryError('JSON 解析失败', e);
+    }
+
+    const validation = validateWordLibrary(parsed);
+    if (!validation.isValid) {
+      throw new LibraryError('字库验证失败', validation.errors);
+    }
+
+    const library = parsed as WordLibrary;
+    library.id = crypto.randomUUID();
+    library.createdAt = Date.now();
+    library.updatedAt = Date.now();
+
+    await this.save(library);
+    return library;
   }
 };
 ```
