@@ -18,6 +18,10 @@ interface GameStore {
   // 引擎实例
   engine: GameEngine | null;
 
+  // UI 状态
+  isPaused: boolean;
+  showExitConfirm: boolean;
+
   // Actions
   initialize: (config: GameConfig, wordLibrary: Word[]) => void;
   start: () => void;
@@ -26,6 +30,10 @@ interface GameStore {
   stop: () => void;
   handleInput: (key: string) => boolean;
   reset: () => void;
+
+  // 暂停控制
+  togglePause: () => void;
+  setShowExitConfirm: (show: boolean) => void;
 
   // 回调设置
   setOnGameEnd: (
@@ -58,6 +66,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   engine: null,
+
+  // UI 状态
+  isPaused: false,
+  showExitConfirm: false,
 
   // 初始化游戏
   initialize: (config: GameConfig, wordLibrary: Word[]) => {
@@ -161,5 +173,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
         callback(result);
       });
     }
+  },
+
+  // 切换暂停状态
+  togglePause: () => {
+    const { isPaused, engine } = get();
+    const newPaused = !isPaused;
+
+    if (newPaused) {
+      // 暂停游戏
+      if (engine) {
+        engine.pause();
+      }
+    } else {
+      // 恢复游戏
+      if (engine) {
+        engine.resume();
+      }
+    }
+
+    set({ isPaused: newPaused });
+  },
+
+  // 设置退出确认对话框显示状态
+  setShowExitConfirm: (show: boolean) => {
+    set({ showExitConfirm: show });
   },
 }));

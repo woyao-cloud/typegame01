@@ -7,6 +7,8 @@ import { useGameStore } from '@/stores/gameStore';
 import { TrackManager } from '@/engine/TrackManager';
 import { GameHUD } from './GameHUD';
 import { GameOver } from './GameOver';
+import { PauseMenu } from './PauseMenu';
+import { ExitConfirmDialog } from './ExitConfirmDialog';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { getAudioManager } from '@/utils/audio';
 
@@ -16,10 +18,20 @@ interface GameScreenProps {
 
 /**
  * 游戏主界面
- * 包含：轨道区域、HUD、游戏结束弹窗
+ * 包含：轨道区域、HUD、游戏结束弹窗、暂停菜单、退出确认
  */
 export function GameScreen({ onBackToMenu }: GameScreenProps) {
-  const { gameState, config, handleInput, setOnGameEnd, start } = useGameStore();
+  const {
+    gameState,
+    config,
+    handleInput,
+    setOnGameEnd,
+    start,
+    isPaused,
+    showExitConfirm,
+    togglePause,
+    setShowExitConfirm,
+  } = useGameStore();
   const audioManager = getAudioManager();
 
   // 游戏结束回调
@@ -36,7 +48,7 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
 
   // 使用键盘 Hook
   useKeyboard({
-    enabled: gameState.status === 'playing',
+    enabled: gameState.status === 'playing' && !isPaused,
     onKeyPress: handleKeyPress,
   });
 
@@ -47,6 +59,18 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
       start();
     }
   }, [gameState.status, audioManager, start]);
+
+  // ESC 键暂停
+  React.useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && gameState.status === 'playing') {
+        togglePause();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscKey);
+    return () => window.removeEventListener('keydown', handleEscKey);
+  }, [gameState.status, togglePause]);
 
   // 计算当前 WPM
   const wpm = React.useMemo(() => {
@@ -66,6 +90,22 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
     const duration = config.duration * 1000;
     const progress = (gameState.elapsedTime % duration) / duration;
     return Math.min(progress * 100, 85); // 最多到 85% 位置
+  };
+
+  // 处理退出确认
+  const handleExitConfirm = () => {
+    setShowExitConfirm(true);
+  };
+
+  // 处理退出执行
+  const handleExitExecute = () => {
+    setShowExitConfirm(false);
+    onBackToMenu();
+  };
+
+  // 处理退出取消
+  const handleExitCancel = () => {
+    setShowExitConfirm(false);
   };
 
   if (gameState.status === 'gameover') {
@@ -90,6 +130,27 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
         <div className="absolute top-40 left-1/3 text-4xl opacity-20 animate-bounce" style={{ animationDelay: '0.5s' }}>☁️</div>
       </div>
 
+      {/* 顶部控制栏 */}
+      <div className="absolute top-4 right-4 z-30 flex gap-2">
+        {/* 暂停按钮 */}
+        <button
+          onClick={togglePause}
+          className="w-12 h-12 flex items-center justify-center bg-white/90 rounded-xl shadow-lg border-2 border-sky-400 hover:bg-sky-50 transition-colors"
+          title="暂停游戏 (ESC)"
+        >
+          <span className="text-2xl">{isPaused ? '▶️' : '⏸️'}</span>
+        </button>
+
+        {/* 退出按钮 */}
+        <button
+          onClick={handleExitConfirm}
+          className="w-12 h-12 flex items-center justify-center bg-white/90 rounded-xl shadow-lg border-2 border-red-300 hover:bg-red-50 transition-colors"
+          title="退出游戏"
+        >
+          <span className="text-xl">🏠</span>
+        </button>
+      </div>
+
       {/* HUD */}
       <GameHUD
         score={gameState.score}
@@ -101,7 +162,7 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
       />
 
       {/* 轨道区域 */}
-      <div className="absolute inset-0 pt-24 pb-4">
+      <div className={`absolute inset-0 pt-24 pb-4 transition-filter ${isPaused ? 'blur-sm' : ''}`}>
         <div className="container mx-auto h-full flex px-4">
           {/* 5 条轨道 */}
           {[0, 1, 2, 3, 4].map((trackIndex) => (
@@ -151,14 +212,33 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
       )}
 
       {/* 连击显示 */}
-      {gameState.combo >= 5 && (
+      {gameState.combo >= 5 && !isPaused && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
           <div className="text-center animate-bounce">
-            <div className="text-6xl font-bold text-orange-500 drop-shadow-lg">
+            <div className="text-6xl font-bold text-orange-500 drop-shadow-lg combo-fire">
               🔥 {gameState.combo} 连击!
             </div>
           </div>
         </div>
+      )}
+
+      {/* 暂停菜单 */}
+      {isPaused && (
+        <PauseMenu
+          onResume={togglePause}
+          onExit={() => {
+            togglePause();
+            handleExitConfirm();
+          }}
+        />
+      )}
+
+      {/* 退出确认对话框 */}
+      {showExitConfirm && (
+        <ExitConfirmDialog
+          onConfirm={handleExitExecute}
+          onCancel={handleExitCancel}
+        />
       )}
     </div>
   );

@@ -2,7 +2,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useConfigStore } from '@/stores/configStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SettingsModal } from '@/components/settings/SettingsModal';
 
 interface MenuScreenProps {
   onStartGame: () => void;
@@ -23,6 +24,7 @@ interface MenuScreenProps {
  */
 export function MenuScreen({ onStartGame }: MenuScreenProps) {
   const { gameConfig, setGameConfig } = useConfigStore();
+  const [showSettings, setShowSettings] = useState(false);
 
   // 难度选项
   const difficultyOptions = [
@@ -211,8 +213,25 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
           >
             🎮 开始游戏
           </Button>
+
+          {/* 设置按钮 */}
+          <div className="flex justify-center pt-2">
+            <Button
+              onClick={() => setShowSettings(true)}
+              variant="outline"
+              className="h-10"
+            >
+              ⚙️ 游戏设置
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {/* 设置模态框 */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </div>
   );
 }

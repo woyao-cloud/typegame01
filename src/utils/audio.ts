@@ -133,13 +133,43 @@ export class AudioManager {
 
   /**
    * 获取 Base64 音频数据
+   * 使用 Web Audio API 生成简单音效，无需外部文件
    */
   private getBeepData(sound: SoundEffect): string {
-    // 简单的 beep 音 (实际项目中可以替换为真实音效文件)
-    const frequency = this.frequencies[sound];
-    // 这里返回一个简单的正弦波 Base64
-    // 实际使用时可以加载外部音效文件
+    // 降级方案：返回空字符串，由 playWithAudioElement 处理
+    // 实际项目中可以替换为真实音效文件的 Base64 编码
     return '';
+  }
+
+  /**
+   * 播放升级音效（达到特定连击数）
+   * @param level 连击等级 (5/10/20/50)
+   */
+  playLevelUp(level: number): void {
+    if (!this.audioContext) return;
+
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    // 根据等级设置不同频率
+    const baseFreq = 523.25; // C5
+    const freqMultiplier = level >= 50 ? 2 : level >= 20 ? 1.5 : level >= 10 ? 1.25 : 1;
+    oscillator.frequency.value = baseFreq * freqMultiplier;
+    oscillator.type = 'sine';
+
+    // 升级音效更长更欢快
+    const now = this.audioContext.currentTime;
+    const duration = 0.3;
+
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(this.config.volume, now + 0.05);
+    gainNode.gain.linearRampToValueAtTime(0, now + duration);
+
+    oscillator.start(now);
+    oscillator.stop(now + duration);
   }
 
   /**
@@ -203,6 +233,13 @@ export class AudioManager {
    */
   playClick(): void {
     this.play('click');
+  }
+
+  /**
+   * 播放升级音效
+   */
+  playLevelUp(level: number): void {
+    this.playLevelUp(level);
   }
 }
 

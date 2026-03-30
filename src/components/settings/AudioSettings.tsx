@@ -106,15 +106,33 @@ export function AudioSettings() {
           </button>
         </div>
 
-        {/* 测试按钮 */}
-        <Button
-          onClick={handleTestSound}
-          variant="outline"
-          className="w-full"
-          disabled={!audioConfig.soundEnabled || audioConfig.muted}
-        >
-          测试音效
-        </Button>
+        {/* 测试音效按钮组 */}
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            onClick={() => audioManager.playCorrect()}
+            variant="outline"
+            size="sm"
+            disabled={!audioConfig.soundEnabled || audioConfig.muted}
+          >
+            ✅ 正确
+          </Button>
+          <Button
+            onClick={() => audioManager.playMistake()}
+            variant="outline"
+            size="sm"
+            disabled={!audioConfig.soundEnabled || audioConfig.muted}
+          >
+            ❌ 错误
+          </Button>
+          <Button
+            onClick={handleTestSound}
+            variant="outline"
+            size="sm"
+            disabled={!audioConfig.soundEnabled || audioConfig.muted}
+          >
+            🔔 点击
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
