@@ -1144,6 +1144,13 @@ interface ConfigStore {
   // 当前配置
   currentConfig: Partial<GameConfig>;
 
+  // 音效配置 (MEDIUM FIX #10)
+  audioConfig: {
+    volume: number;
+    muted: boolean;
+    soundEnabled: boolean;
+  };
+
   // 预设配置
   presets: {
     beginner: GameConfig;
@@ -1158,6 +1165,11 @@ interface ConfigStore {
   setDuration: (duration: number) => void;
   setLibrary: (libraryId: string) => void;
   resetToPreset: (preset: 'beginner' | 'intermediate' | 'advanced') => void;
+
+  // 音效配置 Actions (MEDIUM FIX #10)
+  setVolume: (volume: number) => void;
+  setMuted: (muted: boolean) => void;
+  setSoundEnabled: (enabled: boolean) => void;
 }
 
 export const useConfigStore = create<ConfigStore>((set) => ({
@@ -1167,6 +1179,13 @@ export const useConfigStore = create<ConfigStore>((set) => ({
     speed: 2,
     duration: 300,
     libraryId: 'default'
+  },
+
+  // MEDIUM FIX #10: 音效配置
+  audioConfig: {
+    volume: 0.6,
+    muted: false,
+    soundEnabled: true
   },
 
   presets: {
@@ -1221,6 +1240,22 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   resetToPreset: (preset) =>
     set(state => ({
       currentConfig: { ...state.presets[preset] }
+    })),
+
+  // MEDIUM FIX #10: 音效配置 Actions
+  setVolume: (volume) =>
+    set(state => ({
+      audioConfig: { ...state.audioConfig, volume }
+    })),
+
+  setMuted: (muted) =>
+    set(state => ({
+      audioConfig: { ...state.audioConfig, muted }
+    })),
+
+  setSoundEnabled: (enabled) =>
+    set(state => ({
+      audioConfig: { ...state.audioConfig, soundEnabled: enabled }
     }))
 }));
 ```
@@ -1654,7 +1689,128 @@ App
 │       └── LibraryEditor
 └── Provider
     ├── ZustandProvider
-    └── ThemeProvider
+    ├── ThemeProvider
+    └── ErrorBoundary
+```
+
+### 7.2 加载状态组件 (MEDIUM FIX #12)
+
+**使用场景**:
+- 字库导入时
+- 历史记录查询时
+- 游戏资源预加载时
+
+```typescript
+// src/components/ui/Loading.tsx
+
+import React from 'react';
+
+interface LoadingProps {
+  message?: string;
+  size?: 'sm' | 'md' | 'lg';
+  overlay?: boolean;
+}
+
+export function Loading({
+  message = '加载中...',
+  size = 'md',
+  overlay = false
+}: LoadingProps) {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-8 h-8',
+    lg: 'w-12 h-12'
+  };
+
+  const content = (
+    <div className="loading-container">
+      <div className={`spinner ${sizeClasses[size]}`}>
+        <div className="spinner-circle"></div>
+      </div>
+      {message && <p className="loading-message">{message}</p>}
+    </div>
+  );
+
+  if (overlay) {
+    return (
+      <div className="loading-overlay">
+        {content}
+      </div>
+    );
+  }
+
+  return content;
+}
+```
+
+**CSS 样式**:
+
+```css
+/* src/styles/loading.css */
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.spinner {
+  position: relative;
+}
+
+.spinner-circle {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #e5e7eb;
+  border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-message {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+```
+
+**使用示例**:
+
+```typescript
+// 字库导入时使用
+async function handleImport() {
+  setIsLoading(true);
+  try {
+    await libraryRepository.import(json);
+  } finally {
+    setIsLoading(false);
+  }
+}
+
+// 渲染
+{isLoading ? (
+  <Loading message="正在导入字库..." overlay />
+) : (
+  <LibraryEditor />
+)}
 ```
 
 ---
@@ -1688,39 +1844,81 @@ export class StorageError extends GameError {
 }
 ```
 
-### 8.2 错误边界
+### 8.2 错误边界 (MEDIUM FIX #9)
+
+**集成位置**: ErrorBoundary 包裹整个应用的所有路由页面
+
+```typescript
+// src/App.tsx
+
+import React from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
+
+export function App() {
+  return (
+    <ErrorBoundary fallback={<div>应用出错了，请刷新重试</div>}>
+      <Router>
+        <StartScreen />
+        <ConfigScreen />
+        <GameScreen />
+        <ResultScreen />
+        <LibraryScreen />
+      </Router>
+    </ErrorBoundary>
+  );
+}
+```
+
+**ErrorBoundary 组件实现**:
 
 ```typescript
 // src/components/ErrorBoundary.tsx
 
-import React from 'react';
+import React, { Component, ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
 
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
-export class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  State
-> {
-  constructor(props: { children: React.ReactNode }) {
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    // 记录错误日志（可发送到错误监控服务）
+    console.error('ErrorBoundary caught:', error, errorInfo);
+    this.setState({ errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
         <div className="error-boundary">
-          <h2>出错了</h2>
-          <p>{this.state.error?.message}</p>
+          <h2>🚫 出错了</h2>
+          <p className="error-message">{this.state.error?.message}</p>
+          <details className="error-details">
+            <summary>错误详情（开发环境）</summary>
+            <pre>{this.state.error?.stack}</pre>
+          </details>
           <button onClick={() => window.location.reload()}>
-            重新加载
+            🔄 重新加载
           </button>
         </div>
       );
@@ -1730,6 +1928,14 @@ export class ErrorBoundary extends React.Component<
   }
 }
 ```
+
+**错误边界策略**:
+
+| 层级 | 包裹范围 | 处理方式 |
+|-----|---------|---------|
+| 应用级 | 整个 App | 显示错误页面，提供刷新按钮 |
+| 路由级 | 每个 Screen | 显示错误提示，可返回主页 |
+| 组件级 | 关键组件（如字库编辑器） | 显示局部错误，不影响其他功能 |
 
 ---
 

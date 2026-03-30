@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 身体 -->
+  <ellipse cx="100" cy="120" rx="60" ry="70" fill="#FFD93D" />
+
+  <!-- 肚子 -->
+  <ellipse cx="100" cy="130" rx="40" ry="45" fill="#FFF5B8" />
+
+  <!-- 眼睛 -->
+  <ellipse cx="75" cy="90" rx="18" ry="22" fill="white" />
+  <ellipse cx="125" cy="90" rx="18" ry="22" fill="white" />
+  <circle cx="80" cy="92" r="10" fill="#333" />
+  <circle cx="130" cy="92" r="10" fill="#333" />
+  <circle cx="83" cy="89" r="4" fill="white" />
+  <circle cx="133" cy="89" r="4" fill="white" />
+
+  <!-- 眉毛 -->
+  <path d="M 55 75 Q 75 65 95 75" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round" />
+  <path d="M 105 75 Q 125 65 145 75" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round" />
+
+  <!-- 嘴巴 -->
+  <path d="M 80 115 Q 100 135 120 115" stroke="#FF6B6B" stroke-width="4" fill="none" stroke-linecap="round" />
+
+  <!-- 腮红 -->
+  <ellipse cx="60" cy="105" rx="12" ry="8" fill="#FFB6C1" opacity="0.6" />
+  <ellipse cx="140" cy="105" rx="12" ry="8" fill="#FFB6C1" opacity="0.6" />
+
+  <!-- 小手 -->
+  <ellipse cx="35" cy="120" rx="15" ry="25" fill="#FFD93D" />
+  <ellipse cx="165" cy="120" rx="15" ry="25" fill="#FFD93D" />
+
+  <!-- 小脚 -->
+  <ellipse cx="70" cy="185" rx="20" ry="12" fill="#FF6B6B" />
+  <ellipse cx="130" cy="185" rx="20" ry="12" fill="#FF6B6B" />
+
+  <!-- 键盘帽子 -->
+  <rect x="50" y="25" width="100" height="30" rx="5" fill="#4ECDC4" />
+  <rect x="55" y="30" width="15" height="10" rx="2" fill="white" />
+  <rect x="75" y="30" width="15" height="10" rx="2" fill="white" />
+  <rect x="95" y="30" width="15" height="10" rx="2" fill="white" />
+  <rect x="115" y="30" width="15" height="10" rx="2" fill="white" />
+  <rect x="130" y="30" width="15" height="10" rx="2" fill="white" />
+
+  <!-- 天线 -->
+  <line x1="100" y1="25" x2="100" y2="10" stroke="#4ECDC4" stroke-width="3" />
+  <circle cx="100" cy="8" r="6" fill="#FF6B6B" />
+</svg>

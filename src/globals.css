@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 199 89% 48%;
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif, 'Microsoft YaHei', '微软雅黑';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 儿童友好型圆角 */
+.btn-round {
+  border-radius: 9999px;
+}
+
+/* 卡通风格按钮 */
+.btn-cartoon {
+  border-radius: 12px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.1s ease;
+}
+
+.btn-cartoon:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* 下落字母样式 */
+.falling-letter {
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(100vh);
+  }
+}
+
+/* 连击动画 */
+.combo-pop {
+  animation: comboPop 0.3s ease-out;
+}
+
+@keyframes comboPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 连击火焰特效 */
+@keyframes fireGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px #ff6b35, 0 0 20px #ff6b35, 0 0 30px #ff6b35;
+  }
+  50% {
+    text-shadow: 0 0 20px #ff6b35, 0 0 30px #ff6b35, 0 0 40px #ff6b35;
+  }
+}
+
+.combo-fire {
+  animation: fireGlow 1s ease-in-out infinite;
+}
+
+/* 正确输入动画 */
+.correct-hit {
+  animation: correctHit 0.2s ease-out;
+}
+
+@keyframes correctHit {
+  0% {
+    background-color: rgba(34, 197, 94, 0.5);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* 正确输入粒子特效 */
+@keyframes particleBurst {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+.particle-burst {
+  animation: particleBurst 0.3s ease-out;
+}
+
+/* 错误输入动画 */
+.error-shake {
+  animation: errorShake 0.3s ease-out;
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* 星星闪烁动画 */
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+.star-twinkle {
+  animation: starTwinkle 2s ease-in-out infinite;
+}
+
+/* 云朵漂浮动画 */
+@keyframes cloudFloat {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(20px);
+  }
+}
+
+.cloud-float {
+  animation: cloudFloat 3s ease-in-out infinite;
+}
+
+/* 得分弹出动画 */
+@keyframes scorePop {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1);
+  }
+}
+
+.score-pop {
+  animation: scorePop 0.8s ease-out;
+}
+
+/* 彩虹渐变背景 */
+.rainbow-bg {
+  background: linear-gradient(
+    45deg,
+    #ff6b6b,
+    #feca57,
+    #48dbfb,
+    #ff9ff3,
+    #54a0ff
+  );
+  background-size: 400% 400%;
+  animation: rainbowFlow 5s ease infinite;
+}
+
+@keyframes rainbowFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 卡通阴影效果 */
+.cartoon-shadow {
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.1),
+    0 5px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* 弹跳动画 */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.bounce-in {
+  animation: bounceIn 0.5s ease-out;
+}
