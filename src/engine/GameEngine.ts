@@ -52,6 +52,7 @@ export class GameEngine {
     track: number;
     progress: number; // 0-100
     y: number;
+    typedIndex: number; // 已输入字符数
   }> = [];
 
   // 游戏循环
@@ -107,6 +108,7 @@ export class GameEngine {
       elapsedTime: 0,
       currentWord: null,
       typedIndex: 0,
+      activeWords: [],
       mistakes: 0,
       correctChars: 0,
       totalChars: 0,
@@ -176,6 +178,7 @@ export class GameEngine {
 
   /**
    * 处理键盘输入
+   * 支持多字母模式：用户输入任意字母，匹配到轨道上的任意字母即可消除
    * @param key 按下的键
    * @returns 是否成功处理输入
    */
@@ -192,15 +195,19 @@ export class GameEngine {
     this.lastKeyPressTime = now;
     this.lastKeyPressKey = key;
 
-    if (this.state.status !== 'playing' || !this.state.currentWord) {
+    if (this.state.status !== 'playing' || this.activeWords.length === 0) {
       return false;
     }
 
-    const expectedChar = this.state.currentWord.text[this.state.typedIndex];
+    // 在多字母模式下，查找是否有活跃单词匹配当前输入
+    const matchingWord = this.activeWords.find((word) => {
+      const expectedChar = word.text[word.typedIndex];
+      return key.toLowerCase() === expectedChar.toLowerCase();
+    });
 
-    if (key.toLowerCase() === expectedChar.toLowerCase()) {
-      // 输入正确
-      this.handleCorrectInput(key);
+    if (matchingWord) {
+      // 输入正确，处理匹配的单词
+      this.handleCorrectInput(key, matchingWord);
       return true;
     } else {
       // 输入错误
@@ -211,9 +218,13 @@ export class GameEngine {
 
   /**
    * 处理正确输入
+   * @param key 按下的键
+   * @param word 匹配的活跃单词
    */
-  private handleCorrectInput(key: string): void {
-    this.state.typedIndex++;
+  private handleCorrectInput(key: string, word: typeof this.activeWords[0]): void {
+    // 更新该单词的已输入进度
+    word.typedIndex++;
+
     this.state.correctChars++;
     this.state.totalChars++;
     this.state.combo++;
@@ -234,9 +245,13 @@ export class GameEngine {
     this.state.score += points;
 
     // 检查单词是否完成
-    if (this.state.typedIndex >= this.state.currentWord.text.length) {
-      this.completeCurrentWord();
+    if (word.typedIndex >= word.text.length) {
+      this.completeWord(word);
     }
+
+    // 更新状态中的 currentWord 指向最新匹配的单词
+    this.state.currentWord = word;
+    this.state.typedIndex = word.typedIndex;
 
     this.notifyStateChange();
   }
@@ -261,51 +276,118 @@ export class GameEngine {
   }
 
   /**
-   * 完成当前单词
+   * 完成当前单词（旧版兼容）
    */
   private completeCurrentWord(): void {
+    if (this.state.currentWord) {
+      this.completeWord({
+        id: this.state.currentWord.id,
+        text: this.state.currentWord.text,
+        track: 0,
+        progress: 0,
+        y: 0,
+        typedIndex: this.state.typedIndex,
+      });
+    }
+  }
+
+  /**
+   * 完成指定单词
+   * @param word 要完成的单词
+   */
+  private completeWord(word: typeof this.activeWords[0]): void {
     // 播放完成音效
     this.audioManager.playComplete();
 
     // 从活跃单词列表中移除
-    this.activeWords = this.activeWords.filter(
-      (w) => w.text !== this.state.currentWord?.text
-    );
+    this.activeWords = this.activeWords.filter((w) => w.id !== word.id);
 
-    // 生成新单词
-    this.spawnWord();
+    // 如果所有单词都完成了，生成新单词
+    if (this.activeWords.length === 0) {
+      this.spawnWord();
+    }
 
-    this.state.typedIndex = 0;
     this.notifyStateChange();
   }
 
   /**
    * 生成新单词
+   * 同时生成 4 个不同的字母到 4 条轨道
    */
   private spawnWord(): void {
     if (this.wordLibrary.length === 0) {
       return;
     }
 
-    // 使用难度算法选择单词
-    const selectedWord = this.difficultyAlgorithm.selectWord(
-      this.wordLibrary,
-      this.config.difficulty,
-      this.state.currentWord
-    );
+    // 选择 4 个不同的字母
+    const selectedWords: Word[] = [];
+    const usedTracks = new Set<number>();
+    const usedIds = new Set<string>();
 
-    if (selectedWord) {
-      this.state.currentWord = selectedWord;
-      this.state.typedIndex = 0;
+    // 获取可用的字母池（单字母）
+    const letterPool = this.wordLibrary.filter((w) => w.text.length === 1);
+    if (letterPool.length === 0) {
+      return;
+    }
 
-      // 添加到活跃轨道 (用于 track-based 模式)
+    // 选择 4 个不同的字母，分配到 4 条不同的轨道
+    for (let i = 0; i < 4 && letterPool.length > 0; i++) {
+      // 过滤出未使用的字母
+      const availableLetters = letterPool.filter(
+        (w) => !usedIds.has(w.id) && !this.difficultyAlgorithm.isUsed(w.id)
+      );
+
+      if (availableLetters.length === 0) {
+        // 如果所有字母都用过了，清空历史
+        this.difficultyAlgorithm.clearHistory();
+        break;
+      }
+
+      // 使用难度算法选择字母
+      const selectedWord = this.difficultyAlgorithm.selectWord(
+        availableLetters,
+        this.config.difficulty,
+        selectedWords.length > 0 ? selectedWords[selectedWords.length - 1] : null
+      );
+
+      if (!selectedWord) {
+        // 降级：随机选择一个未使用的字母
+        const randomIndex = Math.floor(Math.random() * availableLetters.length);
+        selectedWord = availableLetters[randomIndex];
+      }
+
+      // 分配一个空闲轨道
+      let track = -1;
+      for (let t = 0; t < 5; t++) {
+        if (!usedTracks.has(t)) {
+          track = t;
+          break;
+        }
+      }
+
+      if (track === -1) {
+        track = Math.floor(Math.random() * 5);
+      }
+
+      selectedWords.push(selectedWord);
+      usedTracks.add(track);
+      usedIds.add(selectedWord.id);
+
+      // 添加到活跃单词列表
       this.activeWords.push({
         id: selectedWord.id,
         text: selectedWord.text,
-        track: Math.floor(Math.random() * 5), // 5 个轨道
+        track,
         progress: 0,
         y: 0,
+        typedIndex: 0,
       });
+    }
+
+    // 更新状态中的 currentWord 为第一个单词（兼容性）
+    if (selectedWords.length > 0) {
+      this.state.currentWord = selectedWords[0];
+      this.state.typedIndex = 0;
     }
   }
 
@@ -358,9 +440,16 @@ export class GameEngine {
     // 更新已用时间
     this.state.elapsedTime += deltaTime;
 
-    // 更新轨道上单词的进度
-    const speedMultiplier = this.config.speed / 2;
-    const progressDelta = (deltaTime / 1000) * speedMultiplier * 10; // 每秒 10% 基础进度
+    // 更新轨道上单词的进度 - 使用速度表
+    const speedTable: Record<number, number> = {
+      0: 0.56,  // 超慢：30 秒全程 (100% / 30s)
+      1: 0.83,  // 慢速：20 秒全程 (100% / 20s)
+      2: 1.67,  // 正常：10 秒全程 (100% / 10s)
+      3: 3.33,  // 快速：5 秒全程 (100% / 5s)
+      4: 5.56,  // 极速：3 秒全程 (100% / 3s)
+    };
+    const speedPercentPerSecond = speedTable[this.config.speed] || 1.67;
+    const progressDelta = (deltaTime / 1000) * speedPercentPerSecond;
 
     this.activeWords.forEach((word) => {
       word.progress += progressDelta;
@@ -374,9 +463,10 @@ export class GameEngine {
    * 检查字母是否到达底部
    */
   private checkLetterReachedEnd(): void {
-    const reachedEnd = this.activeWords.some((word) => word.progress >= 100);
+    // 找出所有到达底部的单词
+    const reachedEndWords = this.activeWords.filter((word) => word.progress >= 100);
 
-    if (reachedEnd) {
+    if (reachedEndWords.length > 0) {
       // 播放 Miss 音效
       this.audioManager.playMistake();
 
@@ -393,11 +483,13 @@ export class GameEngine {
       }
 
       // 移除到达底部的单词
+      const reachedEndIds = new Set(reachedEndWords.map((w) => w.id));
       this.activeWords = this.activeWords.filter((w) => w.progress < 100);
 
-      // 生成新单词
-      this.spawnWord();
-      this.state.typedIndex = 0;
+      // 如果所有单词都消失了，生成新单词
+      if (this.activeWords.length === 0) {
+        this.spawnWord();
+      }
 
       this.notifyStateChange();
     }
@@ -698,5 +790,12 @@ class DifficultyAlgorithm {
    */
   clearHistory(): void {
     this.usedWords.clear();
+  }
+
+  /**
+   * 检查单词是否已使用
+   */
+  isUsed(wordId: string): boolean {
+    return this.usedWords.has(wordId);
   }
 }

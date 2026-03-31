@@ -31,7 +31,7 @@ interface ConfigStore {
 const DEFAULT_GAME_CONFIG: GameConfig = {
   mode: 'letter',
   difficulty: 1,
-  speed: 2,
+  speed: 1,  // 默认慢速
   duration: 120,
   libraryId: 'default-letters',
 };

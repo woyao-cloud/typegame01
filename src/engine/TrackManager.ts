@@ -52,11 +52,24 @@ export class TrackManager {
 
   /**
    * 设置速度等级
+   * 速度等级 0-4：
+   * - 0: 超慢 (30 秒全程) - baseSpeed = 0.17
+   * - 1: 慢速 (20 秒全程) - baseSpeed = 0.25
+   * - 2: 正常 (10 秒全程) - baseSpeed = 0.5
+   * - 3: 快速 (5 秒全程) - baseSpeed = 1.0
+   * - 4: 极速 (3 秒全程) - baseSpeed = 1.67
    */
   setSpeedLevel(speedLevel: number): void {
-    // 速度等级 1-4
-    const clampedLevel = Math.max(1, Math.min(4, speedLevel));
-    this.config.baseSpeed = 0.3 + (clampedLevel - 1) * 0.2;
+    // 速度等级 0-4
+    const clampedLevel = Math.max(0, Math.min(4, speedLevel));
+    const speedTable: Record<number, number> = {
+      0: 0.17,  // 超慢：30 秒
+      1: 0.25,  // 慢速：20 秒
+      2: 0.5,   // 正常：10 秒
+      3: 1.0,   // 快速：5 秒
+      4: 1.67,  // 极速：3 秒
+    };
+    this.config.baseSpeed = speedTable[clampedLevel] || 0.5;
   }
 
   /**

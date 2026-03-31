@@ -184,45 +184,50 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
               key={trackIndex}
               className={`flex-1 border-r border-sky-300/30 last:border-r-0 relative track-highlight rounded-lg`}
             >
-              {/* 轨道上的单词 - 字母显示在吉祥物中间，移除方框 */}
-              {gameState.currentWord && (
-                <div
-                  className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center falling-letter-float"
-                  style={{
-                    top: `${getFallProgress()}%`,
-                  }}
-                >
-                  {/* 吉祥物背景 */}
-                  <span className="text-6xl opacity-80">🎈</span>
-                  {/* 字母叠加在吉祥物上方 */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-white drop-shadow-lg letter-hit">
-                      {gameState.currentWord.text.slice(0, gameState.typedIndex)}
-                    </span>
-                    <span className="text-3xl font-bold text-yellow-300 drop-shadow-lg star-twinkle-bright">
-                      {gameState.currentWord.text.slice(gameState.typedIndex)}
-                    </span>
+              {/* 轨道上的单词 - 多字母模式 */}
+              {(gameState.activeWords || [])
+                .filter((word) => word.track === trackIndex)
+                .map((word) => (
+                  <div
+                    key={word.id}
+                    className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center falling-letter-float"
+                    style={{
+                      top: `${(word.progress / 100) * 85}%`,
+                    }}
+                  >
+                    {/* 吉祥物背景 */}
+                    <span className="text-6xl opacity-80">🎈</span>
+                    {/* 字母叠加在吉祥物上方 */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-3xl font-bold text-white drop-shadow-lg letter-hit">
+                        {word.text.slice(0, word.typedIndex)}
+                      </span>
+                      <span className="text-3xl font-bold text-yellow-300 drop-shadow-lg star-twinkle-bright">
+                        {word.text.slice(word.typedIndex)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
             </div>
           ))}
         </div>
       </div>
 
-      {/* 当前单词提示 (底部中央) */}
-      {gameState.currentWord && (
+      {/* 当前单词提示 (底部中央) - 显示所有活跃单词 */}
+      {gameState.activeWords.length > 0 && (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 bounce-in">
           <div className="px-8 py-4 bg-white/95 rounded-2xl shadow-2xl border-4 border-sky-400 cartoon-shadow button-glow">
-            <div className="flex items-center gap-1">
-              {/* 已输入部分 (绿色) - 带闪光效果 */}
-              <span className="text-4xl font-bold text-green-600 drop-shadow-md correct-flash">
-                {gameState.currentWord.text.slice(0, gameState.typedIndex)}
-              </span>
-              {/* 未输入部分 (带下划线提示) - 带闪烁 */}
-              <span className="text-4xl font-bold text-gray-800 border-b-4 border-sky-400 star-twinkle-bright">
-                {gameState.currentWord.text.slice(gameState.typedIndex) || '_'}
-              </span>
+            <div className="flex items-center gap-2 flex-wrap justify-center max-w-md">
+              {gameState.activeWords.map((word) => (
+                <div key={word.id} className="flex items-center gap-1">
+                  <span className="text-2xl font-bold text-green-600 drop-shadow-md">
+                    {word.text.slice(0, word.typedIndex)}
+                  </span>
+                  <span className="text-2xl font-bold text-gray-800 border-b-4 border-sky-400 star-twinkle-bright">
+                    {word.text.slice(word.typedIndex) || '_'}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

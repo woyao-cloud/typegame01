@@ -9,8 +9,8 @@ export type GameMode = 'letter' | 'word';
 // 难度等级 (1-3 星)
 export type Difficulty = 1 | 2 | 3;
 
-// 速度等级 (1-4 档)
-export type Speed = 1 | 2 | 3 | 4;
+// 速度等级 (0-4 档，0 为超慢)
+export type Speed = 0 | 1 | 2 | 3 | 4;
 
 // 游戏配置
 export interface GameConfig {
@@ -29,14 +29,22 @@ export interface Word {
   translation?: string;
 }
 
+// 活跃单词（用于多字母模式）
+export interface ActiveWord extends Word {
+  track: number; // 轨道号 0-4
+  progress: number; // 进度 0-100%
+  typedIndex: number; // 已输入字符数
+}
+
 // 游戏状态
 export interface GameState {
   status: GameStatus;
   score: number;
   combo: number;
   elapsedTime: number; // 已用时间 (毫秒)
-  currentWord: Word | null;
-  typedIndex: number;
+  currentWord: Word | null; // 兼容旧版
+  typedIndex: number; // 兼容旧版
+  activeWords: ActiveWord[]; // 多字母模式下的活跃单词
   mistakes: number;
   correctChars: number;
   totalChars: number;

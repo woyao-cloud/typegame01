@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SettingsModal } from '@/components/settings/SettingsModal';
-import { getThemeById } from '@/data/themes';
+import { getThemeById, THEMES } from '@/data/themes';
 
 interface MenuScreenProps {
   onStartGame: () => void;
@@ -37,10 +37,11 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
 
   // 速度选项
   const speedOptions = [
-    { value: 1, label: '慢速', icon: '🐢' },
-    { value: 2, label: '正常', icon: '🚶' },
-    { value: 3, label: '快速', icon: '🏃' },
-    { value: 4, label: '极速', icon: '🚀' },
+    { value: 0, label: '超慢', icon: '🐌', description: '30 秒全程' },
+    { value: 1, label: '慢速', icon: '🚶', description: '20 秒全程' },
+    { value: 2, label: '正常', icon: '🏃', description: '10 秒全程' },
+    { value: 3, label: '快速', icon: '🚀', description: '5 秒全程' },
+    { value: 4, label: '极速', icon: '⚡', description: '3 秒全程' },
   ];
 
   // 模式选项
@@ -56,6 +57,15 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
     { value: 600, label: '10 分钟' },
   ];
 
+  // 主题选项
+  const themeOptions = THEMES.map((theme) => ({
+    value: theme.id,
+    label: theme.name,
+    icon: theme.icon,
+    description: theme.description,
+  }));
+
+  const currentThemeOption = themeOptions.find((t) => t.value === themeId);
   const currentDifficulty = difficultyOptions.find(
     (d) => d.value === gameConfig.difficulty
   );
@@ -113,6 +123,47 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                 </Button>
               ))}
             </div>
+          </div>
+
+          {/* 主题选择 */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              主题
+            </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-lg justify-between spring-bounce"
+                >
+                  <span>
+                    <span className="mr-2">{currentThemeOption?.icon}</span>
+                    {currentThemeOption?.label}
+                  </span>
+                  <span className="text-gray-400">▼</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full max-h-[300px] overflow-y-auto">
+                {themeOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() =>
+                      useConfigStore.getState().setTheme(option.value as any)
+                    }
+                    className="p-3 cursor-pointer"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {option.icon} {option.label}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {option.description}
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* 难度和速度选择 */}
@@ -181,13 +232,18 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                     <DropdownMenuItem
                       key={option.value}
                       onClick={() =>
-                        setGameConfig({ speed: option.value as 1 | 2 | 3 | 4 })
+                        setGameConfig({ speed: option.value as 0 | 1 | 2 | 3 | 4 })
                       }
                       className="p-3 cursor-pointer"
                     >
-                      <span className="text-lg">
-                        {option.icon} {option.label}
-                      </span>
+                      <div>
+                        <div className="font-medium">
+                          {option.icon} {option.label}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {option.description}
+                        </div>
+                      </div>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
