@@ -77,7 +77,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     console.log('gameStore.initialize() called, wordLibrary length:', wordLibrary.length);
     const engine = new GameEngine({
       onStateChange: (state) => {
-        console.log('engine.onStateChange:', state);
+        //console.log('engine.onStateChange:', state);
         set({ gameState: { ...get().gameState, ...state } });
       },
     });
