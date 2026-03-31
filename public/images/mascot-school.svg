@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 书本身体 -->
+  <rect x="50" y="80" width="100" height="80" rx="10" fill="#F472B6" />
+  <rect x="55" y="85" width="90" height="70" rx="8" fill="#FBCFE8" />
+
+  <!-- 书脊 -->
+  <rect x="50" y="80" width="15" height="80" rx="5" fill="#EC4899" />
+
+  <!-- 可爱眼睛 -->
+  <ellipse cx="85" cy="110" rx="12" ry="15" fill="white" />
+  <ellipse cx="115" cy="110" rx="12" ry="15" fill="white" />
+  <circle cx="88" cy="113" r="7" fill="#333" />
+  <circle cx="118" cy="113" r="7" fill="#333" />
+  <circle cx="91" cy="110" r="3" fill="white" />
+  <circle cx="121" cy="110" r="3" fill="white" />
+
+  <!-- 眼镜 -->
+  <circle cx="88" cy="113" r="14" stroke="#6B7280" stroke-width="2" fill="none" />
+  <circle cx="118" cy="113" r="14" stroke="#6B7280" stroke-width="2" fill="none" />
+  <line x1="102" y1="113" x2="104" y2="113" stroke="#6B7280" stroke-width="2" />
+
+  <!-- 微笑嘴巴 -->
+  <path d="M 90 135 Q 100 145 110 135" stroke="#EC4899" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- 腮红 -->
+  <ellipse cx="70" cy="125" rx="10" ry="6" fill="#FCA5A5" opacity="0.5" />
+  <ellipse cx="130" cy="125" rx="10" ry="6" fill="#FCA5A5" opacity="0.5" />
+
+  <!-- 毕业帽 -->
+  <rect x="70" y="50" width="60" height="10" fill="#374151" />
+  <polygon points="100,30 140,50 100,70 60,50" fill="#374151" />
+  <circle cx="140" cy="50" r="5" fill="#FCD34D" />
+  <line x1="140" y1="50" x2="140" y2="80" stroke="#FCD34D" stroke-width="2" />
+
+  <!-- 小手 -->
+  <ellipse cx="40" cy="130" rx="15" ry="20" fill="#F472B6" />
+  <ellipse cx="160" cy="130" rx="15" ry="20" fill="#F472B6" />
+
+  <!-- 键盘装饰 -->
+  <rect x="85" y="95" width="12" height="12" rx="2" fill="#60A5FA" />
+  <rect x="103" y="95" width="12" height="12" rx="2" fill="#60A5FA" />
+  <text x="89" y="105" font-size="9" fill="white" font-weight="bold">Z</text>
+  <text x="107" y="105" font-size="9" fill="white" font-weight="bold">X</text>
+</svg>

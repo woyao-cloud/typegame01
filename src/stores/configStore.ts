@@ -2,7 +2,8 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { GameConfig, AudioConfig } from '@/types';
+import { GameConfig, AudioConfig, ThemeId } from '@/types';
+import { DEFAULT_THEME } from '@/data/themes';
 
 /**
  * 配置 Store
@@ -14,9 +15,13 @@ interface ConfigStore {
   // 音频配置
   audioConfig: AudioConfig;
 
+  // 主题配置
+  themeId: ThemeId;
+
   // Actions
   setGameConfig: (config: Partial<GameConfig>) => void;
   setAudioConfig: (config: Partial<AudioConfig>) => void;
+  setTheme: (themeId: ThemeId) => void;
   reset: () => void;
 }
 
@@ -37,6 +42,8 @@ const DEFAULT_AUDIO_CONFIG: AudioConfig = {
   soundEnabled: true,
 };
 
+const DEFAULT_THEME_ID: ThemeId = 'animals'; // 默认主题：小动物
+
 /**
  * 创建配置 Store
  */
@@ -46,6 +53,7 @@ export const useConfigStore = create<ConfigStore>()(
       // 初始状态
       gameConfig: DEFAULT_GAME_CONFIG,
       audioConfig: DEFAULT_AUDIO_CONFIG,
+      themeId: DEFAULT_THEME_ID,
 
       // 设置游戏配置
       setGameConfig: (config) =>
@@ -59,10 +67,17 @@ export const useConfigStore = create<ConfigStore>()(
           audioConfig: { ...state.audioConfig, ...config },
         })),
 
+      // 设置主题
+      setTheme: (themeId) =>
+        set(() => ({
+          themeId,
+        })),
+
       // 重置配置
       reset: () => ({
         gameConfig: DEFAULT_GAME_CONFIG,
         audioConfig: DEFAULT_AUDIO_CONFIG,
+        themeId: DEFAULT_THEME_ID,
       }),
     }),
     {
@@ -70,6 +85,7 @@ export const useConfigStore = create<ConfigStore>()(
       partialize: (state) => ({
         gameConfig: state.gameConfig,
         audioConfig: state.audioConfig,
+        themeId: state.themeId,
       }),
     }
   )

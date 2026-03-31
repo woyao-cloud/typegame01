@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 向日葵身体 -->
+  <circle cx="100" cy="110" r="50" fill="#FCD34D" />
+  <circle cx="100" cy="110" r="35" fill="#F59E0B" />
+
+  <!-- 花瓣 -->
+  <ellipse cx="100" cy="55" rx="15" ry="25" fill="#FCD34D" />
+  <ellipse cx="100" cy="165" rx="15" ry="25" fill="#FCD34D" />
+  <ellipse cx="55" cy="110" rx="25" ry="15" fill="#FCD34D" />
+  <ellipse cx="145" cy="110" rx="25" ry="15" fill="#FCD34D" />
+  <ellipse cx="65" cy="75" rx="18" ry="22" fill="#FCD34D" />
+  <ellipse cx="135" cy="75" rx="18" ry="22" fill="#FCD34D" />
+  <ellipse cx="65" cy="145" rx="18" ry="22" fill="#FCD34D" />
+  <ellipse cx="135" cy="145" rx="18" ry="22" fill="#FCD34D" />
+
+  <!-- 笑脸眼睛 -->
+  <ellipse cx="85" cy="100" rx="8" ry="10" fill="#3E2723" />
+  <ellipse cx="115" cy="100" rx="8" ry="10" fill="#3E2723" />
+  <circle cx="88" cy="97" r="4" fill="white" />
+  <circle cx="118" cy="97" r="4" fill="white" />
+
+  <!-- 微笑嘴巴 -->
+  <path d="M 80 120 Q 100 140 120 120" stroke="#3E2723" stroke-width="4" fill="none" stroke-linecap="round" />
+
+  <!-- 腮红 -->
+  <ellipse cx="70" cy="115" rx="10" ry="6" fill="#FFB6C1" opacity="0.6" />
+  <ellipse cx="130" cy="115" rx="10" ry="6" fill="#FFB6C1" opacity="0.6" />
+
+  <!-- 茎和叶子 -->
+  <rect x="95" cy="160" width="10" height="35" fill="#4ADE80" />
+  <ellipse cx="70" cy="175" rx="20" ry="10" fill="#4ADE80" />
+  <ellipse cx="130" cy="175" rx="20" ry="10" fill="#4ADE80" />
+
+  <!-- 键盘装饰 -->
+  <rect x="85" y="105" width="12" height="12" rx="2" fill="#60A5FA" />
+  <rect x="103" y="105" width="12" height="12" rx="2" fill="#60A5FA" />
+  <text x="89" y="115" font-size="8" fill="white" font-weight="bold">D</text>
+  <text x="107" y="115" font-size="8" fill="white" font-weight="bold">F</text>
+</svg>

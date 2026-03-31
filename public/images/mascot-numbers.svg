@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 计算器身体 -->
+  <rect x="55" y="60" width="90" height="110" rx="12" fill="#6B7280" />
+  <rect x="60" y="65" width="80" height="100" rx="8" fill="#1F2937" />
+
+  <!-- 屏幕 -->
+  <rect x="68" y="72" width="64" height="30" rx="3" fill="#22C55E" />
+  <rect x="72" y="76" width="56" height="22" rx="2" fill="#86EFAC" />
+
+  <!-- 屏幕眼睛 -->
+  <circle cx="90" cy="87" r="5" fill="#333" />
+  <circle cx="110" cy="87" r="5" fill="#333" />
+  <circle cx="92" cy="85" r="2" fill="white" />
+  <circle cx="112" cy="85" r="2" fill="white" />
+
+  <!-- 按钮行 -->
+  <rect x="68" y="108" width="14" height="12" rx="2" fill="#EF4444" />
+  <rect x="86" y="108" width="14" height="12" rx="2" fill="#F97316" />
+  <rect x="104" y="108" width="14" height="12" rx="2" fill="#FCD34D" />
+  <text x="72" y="117" font-size="8" fill="white" font-weight="bold">7</text>
+  <text x="90" y="117" font-size="8" fill="white" font-weight="bold">8</text>
+  <text x="108" y="117" font-size="8" fill="white" font-weight="bold">9</text>
+
+  <rect x="68" y="124" width="14" height="12" rx="2" fill="#22C55E" />
+  <rect x="86" y="124" width="14" height="12" rx="2" fill="#3B82F6" />
+  <rect x="104" y="124" width="14" height="12" rx="2" fill="#A855F7" />
+  <text x="72" y="133" font-size="8" fill="white" font-weight="bold">4</text>
+  <text x="90" y="133" font-size="8" fill="white" font-weight="bold">5</text>
+  <text x="108" y="133" font-size="8" fill="white" font-weight="bold">6</text>
+
+  <rect x="68" y="140" width="14" height="12" rx="2" fill="#EC4899" />
+  <rect x="86" y="140" width="14" height="12" rx="2" fill="#14B8A6" />
+  <rect x="104" y="140" width="14" height="12" rx="2" fill="#F43F5E" />
+  <text x="72" y="149" font-size="8" fill="white" font-weight="bold">1</text>
+  <text x="90" y="149" font-size="8" fill="white" font-weight="bold">2</text>
+  <text x="108" y="149" font-size="8" fill="white" font-weight="bold">3</text>
+
+  <!-- 微笑嘴巴 -->
+  <path d="M 85 165 Q 100 175 115 165" stroke="#22C55E" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- 腮红 -->
+  <ellipse cx="65" cy="140" rx="8" ry="5" fill="#FCA5A5" opacity="0.5" />
+  <ellipse cx="135" cy="140" rx="8" ry="5" fill="#FCA5A5" opacity="0.5" />
+
+  <!-- 小手 -->
+  <rect x="40" y="120" width="18" height="30" rx="5" fill="#6B7280" />
+  <rect x="142" y="120" width="18" height="30" rx="5" fill="#6B7280" />
+
+  <!-- 小脚 -->
+  <ellipse cx="80" cy="180" rx="18" ry="10" fill="#6B7280" />
+  <ellipse cx="120" cy="180" rx="18" ry="10" fill="#6B7280" />
+</svg>

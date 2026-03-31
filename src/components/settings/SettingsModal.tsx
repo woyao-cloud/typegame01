@@ -5,6 +5,7 @@
 import React from 'react';
 import { useConfigStore } from '@/stores/configStore';
 import { AudioSettings } from './AudioSettings';
+import { ThemeSelector } from './ThemeSelector';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       title="⚙️ 游戏设置"
     >
       <div className="space-y-6">
+        {/* 主题选择 */}
+        <ThemeSelector />
+
         {/* 当前游戏配置概览 */}
         <Card>
           <CardHeader className="pb-3">

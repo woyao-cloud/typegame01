@@ -2,8 +2,8 @@
 
 import { GameState, GameConfig, Word, Difficulty, Speed, GameMode } from '@/types';
 import { getAdjacentKeys } from '@/utils/adjacent-keys';
-import { getSameHandZone } from '@/utils/hand-zone';
-import { getKeyDistance } from '@/utils/keyboard';
+import { getSameHandZone, getHandInfo } from '@/utils/hand-zone';
+import { getKeyDistance, QWERTY_LAYOUT } from '@/utils/keyboard';
 import { getAudioManager } from '@/utils/audio';
 
 /**
@@ -504,9 +504,14 @@ export class GameEngine {
 
 /**
  * 难度算法类
- * 负责根据难度等级选择单词
+ * 负责根据难度等级选择单词，实现智能字母生成
+ * FRD-013: 低难度时同时出现的字母在键盘上位置相近
  */
 class DifficultyAlgorithm {
+  // 已使用的字母记录（用于避免重复）
+  private usedWords: Set<string> = new Set();
+  private readonly MAX_HISTORY = 10;
+
   /**
    * 根据难度选择单词
    * @param wordLibrary 词库
@@ -530,7 +535,108 @@ class DifficultyAlgorithm {
       return this.getRandomWord(wordLibrary, previousWord);
     }
 
-    return this.getRandomWord(filteredWords, previousWord);
+    // 根据难度选择智能生成策略
+    let selected: Word | null = null;
+
+    if (difficulty === 1) {
+      // 简单难度：选择同手区的字母
+      selected = this.selectSameHandWord(filteredWords, previousWord);
+    } else if (difficulty === 2) {
+      // 中等难度：选择相邻键或同手区字母
+      selected = this.selectAdjacentWord(filteredWords, previousWord);
+    } else {
+      // 困难难度：完全随机
+      selected = this.getRandomWord(filteredWords, previousWord);
+    }
+
+    // 记录已使用的单词
+    if (selected) {
+      this.usedWords.add(selected.id);
+      if (this.usedWords.size > this.MAX_HISTORY) {
+        // 移除最早的记录
+        const firstKey = this.usedWords.values().next().value;
+        this.usedWords.delete(firstKey);
+      }
+    }
+
+    return selected;
+  }
+
+  /**
+   * 简单难度：选择同手区的字母
+   * 确保同时出现的字母都在左手区或都在右手区
+   */
+  private selectSameHandWord(words: Word[], previousWord: Word | null): Word | null {
+    // 获取上一个单词的手别
+    let targetHand: 'left' | 'right' | null = null;
+
+    if (previousWord && previousWord.text.length === 1) {
+      targetHand = getHandInfo(previousWord.text[0]).hand;
+    } else {
+      // 随机选择一只手
+      targetHand = Math.random() < 0.5 ? 'left' : 'right';
+    }
+
+    // 过滤出目标手区的字母
+    const sameHandWords = words.filter((w) => {
+      if (w.text.length !== 1) return false;
+      const handInfo = getHandInfo(w.text[0]);
+      return handInfo.hand === targetHand;
+    });
+
+    if (sameHandWords.length > 0) {
+      // 优先选择未使用过的
+      const unusedWords = sameHandWords.filter((w) => !this.usedWords.has(w.id));
+      if (unusedWords.length > 0) {
+        return unusedWords[Math.floor(Math.random() * unusedWords.length)];
+      }
+      // 如果没有未使用的，返回任意一个
+      return sameHandWords[Math.floor(Math.random() * sameHandWords.length)];
+    }
+
+    // 如果目标手区没有可用字母，返回另一只手
+    const otherHandWords = words.filter((w) => {
+      if (w.text.length !== 1) return false;
+      const handInfo = getHandInfo(w.text[0]);
+      return handInfo.hand !== targetHand;
+    });
+
+    if (otherHandWords.length > 0) {
+      const unusedWords = otherHandWords.filter((w) => !this.usedWords.has(w.id));
+      return unusedWords.length > 0
+        ? unusedWords[Math.floor(Math.random() * unusedWords.length)]
+        : otherHandWords[Math.floor(Math.random() * otherHandWords.length)];
+    }
+
+    // 降级：返回任意符合难度的单词
+    return this.getRandomWord(words, previousWord);
+  }
+
+  /**
+   * 中等难度：选择相邻键或同手区字母
+   * 字母之间有一定关联性但不完全限制在同一手区
+   */
+  private selectAdjacentWord(words: Word[], previousWord: Word | null): Word | null {
+    if (previousWord && previousWord.text.length === 1) {
+      // 获取上一个字母的相邻键
+      const adjacentKeys = getAdjacentKeys(previousWord.text[0]);
+
+      // 优先选择相邻键
+      const adjacentWords = words.filter((w) => {
+        if (w.text.length !== 1) return false;
+        return adjacentKeys.includes(w.text[0]);
+      });
+
+      if (adjacentWords.length > 0) {
+        const unusedWords = adjacentWords.filter((w) => !this.usedWords.has(w.id));
+        if (unusedWords.length > 0) {
+          return unusedWords[Math.floor(Math.random() * unusedWords.length)];
+        }
+      }
+    }
+
+    // 没有相邻键可选时，返回同手区字母
+    return this.selectSameHandWord(words, previousWord);
   }
 
   /**
@@ -559,22 +665,38 @@ class DifficultyAlgorithm {
       return words[0];
     }
 
-    // 尝试选择不重复的单词
-    let attempts = 0;
-    const maxAttempts = 3;
+    // 优先选择未使用过的单词
+    const unusedWords = words.filter((w) => !this.usedWords.has(w.id));
 
-    while (attempts < maxAttempts) {
-      const randomIndex = Math.floor(Math.random() * words.length);
-      const selected = words[randomIndex];
+    if (unusedWords.length > 0) {
+      // 尝试选择不重复的单词
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      if (!previousWord || selected.id !== previousWord.id) {
-        return selected;
+      while (attempts < maxAttempts) {
+        const randomIndex = Math.floor(Math.random() * unusedWords.length);
+        const selected = unusedWords[randomIndex];
+
+        if (!previousWord || selected.id !== previousWord.id) {
+          return selected;
+        }
+
+        attempts++;
       }
 
-      attempts++;
+      // 如果多次尝试都重复，返回任意一个未使用的
+      return unusedWords[Math.floor(Math.random() * unusedWords.length)];
     }
 
-    // 如果多次尝试都重复，返回任意一个
+    // 所有单词都用过了，清空历史记录后重新选择
+    this.usedWords.clear();
     return words[Math.floor(Math.random() * words.length)];
+  }
+
+  /**
+   * 清空使用历史
+   */
+  clearHistory(): void {
+    this.usedWords.clear();
   }
 }

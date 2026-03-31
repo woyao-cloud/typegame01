@@ -38,24 +38,24 @@ export function GameHUD({
         <div className="flex items-center justify-between gap-4">
           {/* 左侧：分数和连击 */}
           <div className="flex items-center gap-6">
-            {/* 分数 */}
-            <div className="flex flex-col items-center px-6 py-2 bg-white/90 rounded-xl shadow-lg">
+            {/* 分数 - 带发光效果 */}
+            <div className="flex flex-col items-center px-6 py-2 bg-white/90 rounded-xl shadow-lg cartoon-shadow button-glow">
               <span className="text-xs text-gray-500 uppercase font-medium">
                 分数
               </span>
-              <span className="text-3xl font-bold text-sky-600">
+              <span className="text-3xl font-bold text-sky-600 score-pop">
                 {score.toLocaleString()}
               </span>
             </div>
 
-            {/* 连击 */}
+            {/* 连击 - 带火焰动画 */}
             {combo > 0 && (
-              <div className="flex flex-col items-center px-6 py-2 bg-orange-100/90 rounded-xl shadow-lg border-2 border-orange-400">
+              <div className={`flex flex-col items-center px-6 py-2 bg-orange-100/90 rounded-xl shadow-lg border-2 border-orange-400 cartoon-shadow ${combo >= 5 ? 'combo-pulse' : ''}`}>
                 <span className="text-xs text-orange-600 uppercase font-medium">
                   连击
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-orange-600">
+                  <span className={`text-3xl font-bold text-orange-600 combo-number ${combo >= 10 ? 'combo-fire' : ''}`}>
                     {combo}
                   </span>
                   <span className="text-sm text-orange-500">
@@ -66,24 +66,24 @@ export function GameHUD({
             )}
           </div>
 
-          {/* 中央：倒计时 */}
-          <div className="flex flex-col items-center px-8 py-3 bg-white/90 rounded-xl shadow-lg">
+          {/* 中央：倒计时 - 带警告效果 */}
+          <div className={`flex flex-col items-center px-8 py-3 bg-white/90 rounded-xl shadow-lg cartoon-shadow ${remainingSeconds < 30 ? 'time-warning border-2 border-red-400' : ''}`}>
             <span className="text-xs text-gray-500 uppercase font-medium">
               剩余时间
             </span>
             <span
               className={`text-4xl font-bold ${
-                remainingSeconds < 30 ? 'text-red-600 animate-pulse' : 'text-gray-800'
+                remainingSeconds < 30 ? 'text-red-600 star-twinkle-bright' : 'text-gray-800'
               }`}
             >
               {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
             </span>
           </div>
 
-          {/* 右侧：WPM 和准确率 */}
+          {/* 右侧：WPM 和准确率 - 带弹跳效果 */}
           <div className="flex items-center gap-6">
             {/* WPM */}
-            <div className="flex flex-col items-center px-6 py-2 bg-white/90 rounded-xl shadow-lg">
+            <div className="flex flex-col items-center px-6 py-2 bg-white/90 rounded-xl shadow-lg cartoon-shadow spring-bounce">
               <span className="text-xs text-gray-500 uppercase font-medium">
                 WPM
               </span>
@@ -93,7 +93,7 @@ export function GameHUD({
             </div>
 
             {/* 准确率 */}
-            <div className="flex flex-col items-center px-6 py-2 bg-white/90 rounded-xl shadow-lg">
+            <div className="flex flex-col items-center px-6 py-2 bg-white/90 rounded-xl shadow-lg cartoon-shadow spring-bounce">
               <span className="text-xs text-gray-500 uppercase font-medium">
                 准确率
               </span>

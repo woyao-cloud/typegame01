@@ -85,3 +85,27 @@ export interface AudioConfig {
   muted: boolean;
   soundEnabled: boolean;
 }
+
+// 主题配置
+export type ThemeId =
+  | 'animals'
+  | 'flowers'
+  | 'fruits'
+  | 'vehicles'
+  | 'school'
+  | 'family'
+  | 'colors'
+  | 'numbers';
+
+export interface Theme {
+  id: ThemeId;
+  name: string;
+  description: string;
+  icon: string;
+  mascot: string;
+  primaryColor: string;
+  secondaryColor: string;
+  gradientFrom: string;
+  gradientTo: string;
+  vocabulary: string[];
+}

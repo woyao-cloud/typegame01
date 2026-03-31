@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 彩虹身体 -->
+  <ellipse cx="100" cy="120" rx="65" ry="55" fill="url(#rainbowGradient)" />
+
+  <!-- 彩虹渐变定义 -->
+  <defs>
+    <linearGradient id="rainbowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:1" />
+      <stop offset="16%" style="stop-color:#F97316;stop-opacity:1" />
+      <stop offset="33%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#22C55E;stop-opacity:1" />
+      <stop offset="66%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="83%" style="stop-color:#A855F7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 白色腹部 -->
+  <ellipse cx="100" cy="130" rx="45" ry="40" fill="white" />
+
+  <!-- 可爱眼睛 -->
+  <ellipse cx="85" cy="110" rx="12" ry="15" fill="white" />
+  <ellipse cx="115" cy="110" rx="12" ry="15" fill="white" />
+  <circle cx="88" cy="113" r="7" fill="#333" />
+  <circle cx="118" cy="113" r="7" fill="#333" />
+  <circle cx="91" cy="110" r="3" fill="white" />
+  <circle cx="121" cy="110" r="3" fill="white" />
+
+  <!-- 彩虹眉毛 -->
+  <path d="M 70 95 Q 85 85 100 95" stroke="#EF4444" stroke-width="3" fill="none" stroke-linecap="round" />
+  <path d="M 100 95 Q 115 85 130 95" stroke="#A855F7" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- 微笑嘴巴 -->
+  <path d="M 85 135 Q 100 150 115 135" stroke="#EC4899" stroke-width="4" fill="none" stroke-linecap="round" />
+
+  <!-- 腮红 -->
+  <ellipse cx="65" cy="125" rx="12" ry="7" fill="#FCA5A5" opacity="0.5" />
+  <ellipse cx="135" cy="125" rx="12" ry="7" fill="#FCA5A5" opacity="0.5" />
+
+  <!-- 彩虹小手 -->
+  <ellipse cx="35" cy="130" rx="18" ry="20" fill="#3B82F6" />
+  <ellipse cx="165" cy="130" rx="18" ry="20" fill="#A855F7" />
+
+  <!-- 小脚 -->
+  <ellipse cx="75" cy="175" rx="20" ry="10" fill="#22C55E" />
+  <ellipse cx="125" cy="175" rx="20" ry="10" fill="#FCD34D" />
+
+  <!-- 键盘装饰 -->
+  <rect x="85" y="80" width="12" height="12" rx="2" fill="#EF4444" />
+  <rect x="103" y="80" width="12" height="12" rx="2" fill="#3B82F6" />
+  <text x="89" y="90" font-size="8" fill="white" font-weight="bold">1</text>
+  <text x="107" y="90" font-size="8" fill="white" font-weight="bold">2</text>
+</svg>

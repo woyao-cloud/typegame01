@@ -27,18 +27,18 @@ export const Progress: React.FC<ProgressProps> = ({
 
   return (
     <div className={`relative w-full ${className}`}>
-      {/* 背景轨道 */}
-      <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-        {/* 进度条 */}
+      {/* 背景轨道 - 带卡通阴影 */}
+      <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden cartoon-shadow">
+        {/* 进度条 - 带渐变和动画 */}
         <div
-          className={`h-full ${colorStyles[color]} transition-all duration-300 ease-out rounded-full`}
+          className={`h-full ${colorStyles[color]} transition-all duration-300 ease-out rounded-full progress-fill rainbow-bg`}
           style={{ width: `${percentage}%` }}
         />
       </div>
 
-      {/* 可选标签 */}
+      {/* 可选标签 - 带弹跳效果 */}
       {showLabel && (
-        <span className="absolute right-0 -top-5 text-xs text-gray-600">
+        <span className="absolute right-0 -top-5 text-xs text-gray-600 bounce-in">
           {Math.round(percentage)}%
         </span>
       )}

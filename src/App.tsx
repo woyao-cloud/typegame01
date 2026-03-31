@@ -12,6 +12,7 @@ import { getAudioManager } from '@/utils/audio';
 import { ErrorBoundary } from './components/errors/ErrorBoundary';
 import { StatisticsPanel } from './components/records/StatisticsPanel';
 import { RecordList } from './components/records/RecordList';
+import { getThemeById } from '@/data/themes';
 
 /**
  * 主应用组件
@@ -19,7 +20,8 @@ import { RecordList } from './components/records/RecordList';
 export default function App() {
   const [isGameStarted, setIsGameStarted] = React.useState(false);
   const { initialize } = useGameStore();
-  const { gameConfig, audioConfig } = useConfigStore();
+  const { gameConfig, audioConfig, themeId } = useConfigStore();
+  const currentTheme = getThemeById(themeId);
 
   // 初始化音频管理器
   useEffect(() => {
@@ -89,7 +91,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-sky-100">
+      <div className={`min-h-screen bg-gradient-to-b ${currentTheme?.gradientFrom || 'from-sky-200'} ${currentTheme?.gradientTo || 'to-sky-100'} transition-colors duration-1000`}>
         {isGameStarted ? (
           <GameScreen onBackToMenu={handleBackToMenu} />
         ) : (

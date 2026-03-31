@@ -53,27 +53,3 @@ export function FullScreenLoading({ message = '正在加载...' }: LoadingProps)
     </div>
   );
 }
-
-/**
- * 骨架屏组件
- * 用于内容加载时的占位
- */
-export function Skeleton({
-  className = '',
-  lines = 1,
-}: {
-  className?: string;
-  lines?: number;
-}) {
-  return (
-    <div className={`space-y-2 ${className}`}>
-      {Array.from({ length: lines }).map((_, i) => (
-        <div
-          key={i}
-          className="h-4 bg-gray-200 rounded animate-pulse"
-          style={{ width: `${100 - i * 10}%` }}
-        />
-      ))}
-    </div>
-  );
-}

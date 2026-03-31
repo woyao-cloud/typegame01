@@ -4,6 +4,7 @@
 
 import React, { useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/gameStore';
+import { useConfigStore } from '@/stores/configStore';
 import { TrackManager } from '@/engine/TrackManager';
 import { GameHUD } from './GameHUD';
 import { GameOver } from './GameOver';
@@ -11,6 +12,7 @@ import { PauseMenu } from './PauseMenu';
 import { ExitConfirmDialog } from './ExitConfirmDialog';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { getAudioManager } from '@/utils/audio';
+import { getThemeById } from '@/data/themes';
 
 interface GameScreenProps {
   onBackToMenu: () => void;
@@ -32,6 +34,8 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
     togglePause,
     setShowExitConfirm,
   } = useGameStore();
+  const { themeId } = useConfigStore();
+  const currentTheme = getThemeById(themeId);
   const audioManager = getAudioManager();
 
   // 游戏结束回调
@@ -92,6 +96,12 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
     return Math.min(progress * 100, 85); // 最多到 85% 位置
   };
 
+  // 判断是否需要显示时间警告（剩余 30 秒）
+  const isTimeWarning = React.useMemo(() => {
+    const remaining = config.duration * 1000 - gameState.elapsedTime;
+    return remaining <= 30000 && gameState.status === 'playing';
+  }, [config.duration, gameState.elapsedTime, gameState.status]);
+
   // 处理退出确认
   const handleExitConfirm = () => {
     setShowExitConfirm(true);
@@ -122,12 +132,16 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
   }
 
   return (
-    <div className="relative w-full h-screen bg-gradient-to-b from-sky-200 to-sky-100 overflow-hidden">
-      {/* 背景装饰 */}
+    <div className={`relative w-full h-screen bg-gradient-to-b ${currentTheme?.gradientFrom || 'from-sky-200'} ${currentTheme?.gradientTo || 'to-sky-100'} overflow-hidden ${isTimeWarning ? 'time-warning' : ''}`}>
+      {/* 背景装饰 - 根据主题显示不同的吉祥物 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 text-6xl opacity-20 animate-bounce">☁️</div>
-        <div className="absolute top-20 right-20 text-5xl opacity-20 animate-bounce" style={{ animationDelay: '1s' }}>☁️</div>
-        <div className="absolute top-40 left-1/3 text-4xl opacity-20 animate-bounce" style={{ animationDelay: '0.5s' }}>☁️</div>
+        <div className={`absolute top-10 left-10 text-6xl opacity-20 mascot-bounce`}>{currentTheme?.mascot || '☁️'}</div>
+        <div className={`absolute top-20 right-20 text-5xl opacity-20 mascot-float`} style={{ animationDelay: '1s' }}>{currentTheme?.mascot || '☁️'}</div>
+        <div className={`absolute top-40 left-1/3 text-4xl opacity-20 mascot-bounce`} style={{ animationDelay: '0.5s' }}>{currentTheme?.mascot || '☁️'}</div>
+        {/* 星星装饰 */}
+        <div className="absolute top-1/4 left-1/4 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '0s' }}>⭐</div>
+        <div className="absolute top-1/3 right-1/4 text-3xl opacity-30 star-twinkle-bright" style={{ animationDelay: '0.7s' }}>✨</div>
+        <div className="absolute bottom-1/3 left-1/5 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '1.4s' }}>⭐</div>
       </div>
 
       {/* 顶部控制栏 */}
@@ -164,26 +178,26 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
       {/* 轨道区域 */}
       <div className={`absolute inset-0 pt-24 pb-4 transition-filter ${isPaused ? 'blur-sm' : ''}`}>
         <div className="container mx-auto h-full flex px-4">
-          {/* 5 条轨道 */}
+          {/* 5 条轨道 - 添加高光和卡通阴影 */}
           {[0, 1, 2, 3, 4].map((trackIndex) => (
             <div
               key={trackIndex}
-              className="flex-1 border-r border-sky-300/30 last:border-r-0 relative"
+              className={`flex-1 border-r border-sky-300/30 last:border-r-0 relative track-highlight rounded-lg`}
             >
               {/* 轨道上的单词 */}
               {gameState.currentWord && (
                 <div
-                  className="absolute left-1/2 -translate-x-1/2 px-4 py-3 bg-white rounded-xl shadow-lg border-2 border-sky-400 transition-all duration-100 ease-linear"
+                  className="absolute left-1/2 -translate-x-1/2 px-4 py-3 bg-white/95 rounded-xl shadow-lg border-2 border-sky-400 transition-all duration-100 ease-linear falling-letter-float cartoon-shadow"
                   style={{
                     top: `${getFallProgress()}%`,
                   }}
                 >
-                  {/* 已输入部分 (绿色) */}
-                  <span className="text-2xl font-bold text-green-600">
+                  {/* 已输入部分 (绿色) - 添加击中效果 */}
+                  <span className="text-2xl font-bold text-green-600 drop-shadow-sm letter-hit">
                     {gameState.currentWord.text.slice(0, gameState.typedIndex)}
                   </span>
-                  {/* 未输入部分 */}
-                  <span className="text-2xl font-bold text-gray-800">
+                  {/* 未输入部分 - 带闪烁提示 */}
+                  <span className="text-2xl font-bold text-gray-800 star-twinkle-bright inline-block">
                     {gameState.currentWord.text.slice(gameState.typedIndex)}
                   </span>
                 </div>
@@ -195,15 +209,15 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
 
       {/* 当前单词提示 (底部中央) */}
       {gameState.currentWord && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-          <div className="px-8 py-4 bg-white/95 rounded-2xl shadow-2xl border-4 border-sky-400">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 bounce-in">
+          <div className="px-8 py-4 bg-white/95 rounded-2xl shadow-2xl border-4 border-sky-400 cartoon-shadow button-glow">
             <div className="flex items-center gap-1">
-              {/* 已输入部分 (绿色) */}
-              <span className="text-4xl font-bold text-green-600">
+              {/* 已输入部分 (绿色) - 带闪光效果 */}
+              <span className="text-4xl font-bold text-green-600 drop-shadow-md correct-flash">
                 {gameState.currentWord.text.slice(0, gameState.typedIndex)}
               </span>
-              {/* 未输入部分 (带下划线提示) */}
-              <span className="text-4xl font-bold text-gray-800 border-b-4 border-sky-400">
+              {/* 未输入部分 (带下划线提示) - 带闪烁 */}
+              <span className="text-4xl font-bold text-gray-800 border-b-4 border-sky-400 star-twinkle-bright">
                 {gameState.currentWord.text.slice(gameState.typedIndex) || '_'}
               </span>
             </div>
@@ -211,12 +225,24 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
         </div>
       )}
 
-      {/* 连击显示 */}
+      {/* 连击显示 - 增强版 */}
       {gameState.combo >= 5 && !isPaused && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          <div className="text-center animate-bounce">
-            <div className="text-6xl font-bold text-orange-500 drop-shadow-lg combo-fire">
-              🔥 {gameState.combo} 连击!
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-40">
+          <div className="text-center combo-pulse">
+            {/* 火焰 emoji 动画 */}
+            <div className="text-7xl mb-2 animate-bounce">🔥</div>
+            {/* 连击数字 */}
+            <div className="text-6xl font-black text-orange-500 drop-shadow-lg combo-fire combo-number">
+              {gameState.combo}
+            </div>
+            <div className="text-2xl font-bold text-orange-600 drop-shadow">
+              连击!
+            </div>
+            {/* 装饰星星 */}
+            <div className="flex justify-center gap-2 mt-2">
+              <span className="text-xl star-twinkle-bright">⭐</span>
+              <span className="text-xl star-twinkle-bright" style={{ animationDelay: '0.3s' }}>✨</span>
+              <span className="text-xl star-twinkle-bright" style={{ animationDelay: '0.6s' }}>⭐</span>
             </div>
           </div>
         </div>

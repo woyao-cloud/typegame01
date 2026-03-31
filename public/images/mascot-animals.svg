@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 青蛙身体 -->
+  <ellipse cx="100" cy="130" rx="70" ry="60" fill="#4ADE80" />
+  <ellipse cx="100" cy="140" rx="50" ry="45" fill="#86EFAC" />
+
+  <!-- 大眼睛 -->
+  <circle cx="70" cy="80" r="25" fill="#4ADE80" />
+  <circle cx="130" cy="80" r="25" fill="#4ADE80" />
+  <circle cx="70" cy="80" r="15" fill="white" />
+  <circle cx="130" cy="80" r="15" fill="white" />
+  <circle cx="70" cy="80" r="8" fill="#333" />
+  <circle cx="130" cy="80" r="8" fill="#333" />
+  <circle cx="73" cy="77" r="3" fill="white" />
+  <circle cx="133" cy="77" r="3" fill="white" />
+
+  <!-- 嘴巴 -->
+  <ellipse cx="100" cy="110" rx="30" ry="15" fill="#FECACA" />
+  <path d="M 85 110 Q 100 125 115 110" stroke="#DC2626" stroke-width="3" fill="none" stroke-linecap="round" />
+
+  <!-- 腮红 -->
+  <ellipse cx="55" cy="100" rx="15" ry="10" fill="#FCA5A5" opacity="0.5" />
+  <ellipse cx="145" cy="100" rx="15" ry="10" fill="#FCA5A5" opacity="0.5" />
+
+  <!-- 手脚 -->
+  <ellipse cx="40" cy="140" rx="20" ry="25" fill="#4ADE80" />
+  <ellipse cx="160" cy="140" rx="20" ry="25" fill="#4ADE80" />
+  <ellipse cx="70" cy="185" rx="25" ry="12" fill="#4ADE80" />
+  <ellipse cx="130" cy="185" rx="25" ry="12" fill="#4ADE80" />
+
+  <!-- 键盘按键装饰 -->
+  <rect x="75" y="40" width="20" height="20" rx="3" fill="#60A5FA" />
+  <rect x="105" y="40" width="20" height="20" rx="3" fill="#60A5FA" />
+  <text x="85" y="55" font-size="12" fill="white" font-weight="bold">A</text>
+  <text x="115" y="55" font-size="12" fill="white" font-weight="bold">S</text>
+</svg>
