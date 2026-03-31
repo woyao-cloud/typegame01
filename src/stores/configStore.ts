@@ -37,7 +37,7 @@ const DEFAULT_GAME_CONFIG: GameConfig = {
 };
 
 const DEFAULT_AUDIO_CONFIG: AudioConfig = {
-  volume: 0.5,
+  volume: 0.8,  // 音量 80%
   muted: false,
   soundEnabled: true,
 };

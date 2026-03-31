@@ -81,16 +81,18 @@ export function LibraryManager({ onBack }: LibraryManagerProps) {
   const handleSave = async () => {
     try {
       setIsSaving(true);
+
       const words = editingContent
         .split(/[,，\s\n]+/)
         .filter(w => w.trim().length > 0)
         .map((text, index) => ({
           id: `word-${Date.now()}-${index}`,
           text: text.trim(),
+          category: 'custom',
         }));
 
       if (words.length === 0) {
-        showMessage('error', '字库不能为空');
+        showMessage('error', '字库不能为空，请输入至少一个字母或单词');
         return;
       }
 
@@ -99,15 +101,24 @@ export function LibraryManager({ onBack }: LibraryManagerProps) {
         return;
       }
 
+      const existingLibrary = await libraryRepository.getById(selectedLibraryId);
+      if (!existingLibrary) {
+        showMessage('error', '词库不存在');
+        return;
+      }
+
       await libraryRepository.update(selectedLibraryId, {
         name: libraryName,
         words,
+        language: existingLibrary.language,
+        description: existingLibrary.description,
         updatedAt: Date.now(),
       });
 
       showMessage('success', '字库保存成功');
       loadLibraries();
     } catch (error) {
+      console.error('保存字库失败:', error);
       showMessage('error', '保存失败：' + (error as Error).message);
     } finally {
       setIsSaving(false);

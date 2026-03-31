@@ -213,13 +213,13 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
                       <div className="absolute inset-0 flex items-center justify-center">
                         {/* 已输入部分 - 浅灰色 + 半透明渐隐效果 */}
                         {word.text.slice(0, word.typedIndex) && (
-                          <span className="text-2xl font-black text-gray-400 opacity-40 drop-shadow-xl">
+                          <span className="text-5xl font-black text-gray-400 opacity-40 drop-shadow-xl">
                             {word.text.slice(0, word.typedIndex)}
                           </span>
                         )}
                         {/* 待输入部分 - 黄色高亮 */}
                         {word.text.slice(word.typedIndex) && (
-                          <span className="text-2xl font-black text-yellow-200 drop-shadow-xl star-twinkle-bright">
+                          <span className="text-5xl font-black text-yellow-200 drop-shadow-xl star-twinkle-bright">
                             {word.text.slice(word.typedIndex)}
                           </span>
                         )}

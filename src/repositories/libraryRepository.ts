@@ -82,7 +82,16 @@ export const libraryRepository: LibraryRepository = {
         throw new Error(`词库不存在：${id}`);
       }
 
-      const updatedLibrary: WordLibrary = { ...existing, ...library };
+      // 合并数据时确保保留原有字段
+      const updatedLibrary: WordLibrary = {
+        ...existing,
+        ...library,
+        // 确保这些字段不会被覆盖为空
+        id: existing.id || library.id,
+        language: library.language || existing.language,
+        description: library.description || existing.description,
+      };
+
       const validationResult = validateWordLibrary(updatedLibrary);
       if (!validationResult.valid) {
         throw new Error(`词库验证失败：${validationResult.errors.join(', ')}`);

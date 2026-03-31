@@ -21,9 +21,9 @@ const MAX_WORDS = 500;
 const MAX_WORD_LENGTH = 20;
 
 /**
- * 允许的字符类型 (仅限英文字母和基础标点)
+ * 允许的字符类型 (英文字母、中文字符、空格和基础标点)
  */
-const VALID_CHAR_REGEX = /^[a-zA-Z\s\-'.]+$/;
+const VALID_CHAR_REGEX = /^[\u4e00-\u9fa5a-zA-Z\s\-'.]+$/;
 
 /**
  * 验证词库数据
@@ -52,7 +52,10 @@ export function validateWordLibrary(library: WordLibrary): ValidationResult {
     return { valid: false, errors };
   }
 
-  if (library.words.length === 0) {
+  // 检查 words 是否为有效数组且有数据
+  if (!Array.isArray(library.words)) {
+    errors.push('单词列表必须是数组格式');
+  } else if (library.words.length === 0) {
     errors.push('单词列表不能为空');
   }
 
@@ -102,14 +105,14 @@ function validateWord(word: Word, index: number): string[] {
 
   if (word.text.length > MAX_WORD_LENGTH) {
     errors.push(
-      `单词 "${word.text}" 长度超过限制 (最大 ${MAX_WORD_LENGTH} 个字符)`
+      `第 ${index + 1} 个单词长度超过限制 (最大 ${MAX_WORD_LENGTH} 个字符)`
     );
   }
 
   // 3. 验证字符合法性
   if (!VALID_CHAR_REGEX.test(word.text)) {
     errors.push(
-      `单词 "${word.text}" 包含非法字符 (仅允许英文字母、空格、连字符、撇号和句点)`
+      `第 ${index + 1} 个单词包含非法字符 (仅允许中英文字母、空格、连字符、撇号和句点)`
     );
   }
 
