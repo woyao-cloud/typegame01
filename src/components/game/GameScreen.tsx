@@ -56,13 +56,18 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
     onKeyPress: handleKeyPress,
   });
 
-  // 游戏开始时初始化音频
+  // 游戏开始时启动游戏
   React.useEffect(() => {
-    if (gameState.status === 'idle') {
+    console.log('GameScreen useEffect, gameState.status:', gameState.status);
+    // 在游戏刚进入 playing 状态时启动（由 engine 的 initialize 设置）
+    if (gameState.status === 'playing') {
+      console.log('Game already started, skipping start()');
+    } else if (gameState.status === 'idle') {
+      console.log('Calling start()');
       audioManager.initialize();
       start();
     }
-  }, [gameState.status, audioManager, start]);
+  }, [gameState.status]); // 监听 status 变化
 
   // ESC 键暂停
   React.useEffect(() => {

@@ -121,20 +121,25 @@ export class GameEngine {
    * 开始游戏
    */
   start(): void {
+    console.log('GameEngine.start() called, status:', this.state.status);
     if (this.state.status !== 'idle') {
+      console.log('start() aborted: status is not idle');
       return;
     }
 
     this.state.status = 'playing';
     this.lastUpdateTime = performance.now();
 
+    console.log('spawnWord() called, wordLibrary:', this.wordLibrary);
     // 生成第一个单词
     this.spawnWord();
+    console.log('spawnWord() done, activeWords:', this.activeWords);
 
     // 启动游戏循环
     this.startGameLoop();
 
     this.notifyStateChange();
+    console.log('GameEngine.start() done, state:', this.state);
   }
 
   /**
@@ -316,6 +321,7 @@ export class GameEngine {
    */
   private spawnWord(): void {
     if (this.wordLibrary.length === 0) {
+      console.error('spawnWord: wordLibrary is empty');
       return;
     }
 
@@ -325,36 +331,38 @@ export class GameEngine {
     const usedIds = new Set<string>();
 
     // 获取可用的字母池（单字母）
-    const letterPool = this.wordLibrary.filter((w) => w.text.length === 1);
+    let letterPool = this.wordLibrary.filter((w) => w.text.length === 1);
+
+    // 如果没有单字母，使用整个词库
     if (letterPool.length === 0) {
-      return;
+      letterPool = this.wordLibrary;
     }
 
     // 选择 4 个不同的字母，分配到 4 条不同的轨道
-    for (let i = 0; i < 4 && letterPool.length > 0; i++) {
+    for (let i = 0; i < 4; i++) {
       // 过滤出未使用的字母
-      const availableLetters = letterPool.filter(
+      let availableLetters = letterPool.filter(
         (w) => !usedIds.has(w.id) && !this.difficultyAlgorithm.isUsed(w.id)
       );
 
       if (availableLetters.length === 0) {
-        // 如果所有字母都用过了，清空历史
+        // 如果所有字母都用过了，清空历史并重试
         this.difficultyAlgorithm.clearHistory();
+        availableLetters = letterPool.filter((w) => !usedIds.has(w.id));
+      }
+
+      // 如果还是没有可用字母，使用整个词库随机选择
+      if (availableLetters.length === 0) {
+        availableLetters = letterPool;
+      }
+
+      if (availableLetters.length === 0) {
+        console.error('spawnWord: No available letters after all fallbacks');
         break;
       }
 
-      // 使用难度算法选择字母
-      const selectedWord = this.difficultyAlgorithm.selectWord(
-        availableLetters,
-        this.config.difficulty,
-        selectedWords.length > 0 ? selectedWords[selectedWords.length - 1] : null
-      );
-
-      if (!selectedWord) {
-        // 降级：随机选择一个未使用的字母
-        const randomIndex = Math.floor(Math.random() * availableLetters.length);
-        selectedWord = availableLetters[randomIndex];
-      }
+      // 随机选择一个字母（简化逻辑，避免难度算法过度过滤）
+      const selectedWord = availableLetters[Math.floor(Math.random() * availableLetters.length)];
 
       // 分配一个空闲轨道
       let track = -1;
@@ -388,6 +396,8 @@ export class GameEngine {
     if (selectedWords.length > 0) {
       this.state.currentWord = selectedWords[0];
       this.state.typedIndex = 0;
+    } else {
+      console.error('spawnWord: No words were selected!');
     }
   }
 
@@ -557,6 +567,7 @@ export class GameEngine {
         elapsedTime: this.state.elapsedTime,
         currentWord: this.state.currentWord,
         typedIndex: this.state.typedIndex,
+        activeWords: [...this.activeWords], // 同步活跃单词到 UI
         mistakes: this.state.mistakes,
         correctChars: this.state.correctChars,
         totalChars: this.state.totalChars,

@@ -74,19 +74,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // 初始化游戏
   initialize: (config: GameConfig, wordLibrary: Word[]) => {
+    console.log('gameStore.initialize() called, wordLibrary length:', wordLibrary.length);
     const engine = new GameEngine({
       onStateChange: (state) => {
+        console.log('engine.onStateChange:', state);
         set({ gameState: { ...get().gameState, ...state } });
       },
     });
 
     engine.initialize(config, wordLibrary);
 
+    const initialState = engine.getState();
+    console.log('engine.getState() after initialize:', initialState);
     set({
       engine,
       config,
-      gameState: engine.getState(),
+      gameState: initialState,
     });
+
+    // 自动开始游戏
+    setTimeout(() => {
+      console.log('Auto-starting game...');
+      const { engine } = get();
+      if (engine) {
+        engine.start();
+      }
+    }, 0);
   },
 
   // 开始游戏
