@@ -184,22 +184,25 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
               key={trackIndex}
               className={`flex-1 border-r border-sky-300/30 last:border-r-0 relative track-highlight rounded-lg`}
             >
-              {/* 轨道上的单词 */}
+              {/* 轨道上的单词 - 字母显示在吉祥物中间，移除方框 */}
               {gameState.currentWord && (
                 <div
-                  className="absolute left-1/2 -translate-x-1/2 px-4 py-3 bg-white/95 rounded-xl shadow-lg border-2 border-sky-400 transition-all duration-100 ease-linear falling-letter-float cartoon-shadow"
+                  className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center falling-letter-float"
                   style={{
                     top: `${getFallProgress()}%`,
                   }}
                 >
-                  {/* 已输入部分 (绿色) - 添加击中效果 */}
-                  <span className="text-2xl font-bold text-green-600 drop-shadow-sm letter-hit">
-                    {gameState.currentWord.text.slice(0, gameState.typedIndex)}
-                  </span>
-                  {/* 未输入部分 - 带闪烁提示 */}
-                  <span className="text-2xl font-bold text-gray-800 star-twinkle-bright inline-block">
-                    {gameState.currentWord.text.slice(gameState.typedIndex)}
-                  </span>
+                  {/* 吉祥物背景 */}
+                  <span className="text-6xl opacity-80">🎈</span>
+                  {/* 字母叠加在吉祥物上方 */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-white drop-shadow-lg letter-hit">
+                      {gameState.currentWord.text.slice(0, gameState.typedIndex)}
+                    </span>
+                    <span className="text-3xl font-bold text-yellow-300 drop-shadow-lg star-twinkle-bright">
+                      {gameState.currentWord.text.slice(gameState.typedIndex)}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>

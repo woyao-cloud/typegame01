@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { recordRepository } from '@/repositories/recordRepository';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/Loading';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * 统计面板组件

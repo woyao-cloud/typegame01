@@ -76,7 +76,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         <div className="absolute bottom-1/3 left-1/2 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '1.2s' }}>⭐</div>
       </div>
 
-      <Card className="w-full max-w-2xl bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
         <CardHeader className="text-center pb-4">
           {/* 标题图标 - 带脉动动画 */}
           <div className="text-8xl mb-4 combo-pulse inline-block">⌨️</div>

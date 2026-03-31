@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Spinner } from './spinner';
+export { Skeleton } from './skeleton';
 
 interface LoadingProps {
   message?: string;

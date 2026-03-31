@@ -275,19 +275,9 @@ body {
   animation: fallSmooth 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* 字母漂浮效果 - 轻微左右摆动 */
-@keyframes letterFloat {
-  0%, 100% {
-    transform: translateX(-50%) rotate(-2deg);
-  }
-  50% {
-    transform: translateX(-50%) rotate(2deg);
-  }
-}
-
+/* 字母稳定下落动画 - 移除晃动效果 */
 .falling-letter-float {
-  animation: fallSmooth 3s cubic-bezier(0.4, 0, 0.2, 1) forwards,
-             letterFloat 2s ease-in-out infinite;
+  animation: fallSmooth 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* 连击计数器放大动画 */

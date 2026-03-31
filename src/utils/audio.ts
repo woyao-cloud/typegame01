@@ -235,12 +235,6 @@ export class AudioManager {
     this.play('click');
   }
 
-  /**
-   * 播放升级音效
-   */
-  playLevelUp(level: number): void {
-    this.playLevelUp(level);
-  }
 }
 
 /**
