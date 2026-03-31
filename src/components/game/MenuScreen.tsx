@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SettingsModal } from '@/components/settings/SettingsModal';
+import { getThemeById } from '@/data/themes';
 
 interface MenuScreenProps {
   onStartGame: () => void;
@@ -23,8 +24,9 @@ interface MenuScreenProps {
  * 包含：开始游戏按钮、难度选择、速度选择、模式选择
  */
 export function MenuScreen({ onStartGame }: MenuScreenProps) {
-  const { gameConfig, setGameConfig } = useConfigStore();
+  const { gameConfig, setGameConfig, themeId } = useConfigStore();
   const [showSettings, setShowSettings] = useState(false);
+  const currentTheme = getThemeById(themeId);
 
   // 难度选项
   const difficultyOptions = [
@@ -64,19 +66,19 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-300 via-sky-200 to-sky-100 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className={`min-h-screen bg-gradient-to-b ${currentTheme?.gradientFrom || 'from-sky-300'} ${currentTheme?.gradientTo || 'to-sky-100'} flex items-center justify-center p-4 relative overflow-hidden`}>
       {/* 背景装饰 - 漂浮的吉祥物和星星 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 text-6xl opacity-20 mascot-bounce">🐸</div>
-        <div className="absolute top-20 right-20 text-5xl opacity-20 mascot-float" style={{ animationDelay: '1s' }}>🌻</div>
-        <div className="absolute bottom-20 left-1/4 text-4xl opacity-20 mascot-bounce" style={{ animationDelay: '0.5s' }}>🚗</div>
-        <div className="absolute bottom-10 right-1/3 text-3xl opacity-20 mascot-float" style={{ animationDelay: '1.5s' }}>✏️</div>
+        <div className={`absolute top-10 left-10 text-6xl opacity-20 mascot-bounce`}>{currentTheme?.mascot || '🐸'}</div>
+        <div className={`absolute top-20 right-20 text-5xl opacity-20 mascot-float`} style={{ animationDelay: '1s' }}>{currentTheme?.mascot || '🌻'}</div>
+        <div className={`absolute bottom-20 left-1/4 text-4xl opacity-20 mascot-bounce`} style={{ animationDelay: '0.5s' }}>{currentTheme?.mascot || '🚗'}</div>
+        <div className={`absolute bottom-10 right-1/3 text-3xl opacity-20 mascot-float`} style={{ animationDelay: '1.5s' }}>{currentTheme?.mascot || '✏️'}</div>
         <div className="absolute top-1/4 left-1/3 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '0.2s' }}>⭐</div>
         <div className="absolute top-1/2 right-1/4 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '0.8s' }}>✨</div>
         <div className="absolute bottom-1/3 left-1/2 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '1.2s' }}>⭐</div>
       </div>
 
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
+      <Card className="w-full max-w-2xl bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
         <CardHeader className="text-center pb-4">
           {/* 标题图标 - 带脉动动画 */}
           <div className="text-8xl mb-4 combo-pulse inline-block">⌨️</div>
