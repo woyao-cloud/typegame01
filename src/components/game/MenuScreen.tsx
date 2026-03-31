@@ -78,17 +78,17 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         <div className="absolute bottom-1/3 left-1/2 text-2xl opacity-30 star-twinkle-bright" style={{ animationDelay: '1.2s' }}>⭐</div>
       </div>
 
-      <Card className="w-full max-w-2xl bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
-        <CardHeader className="text-center pb-4">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
+        <CardHeader className="text-center pb-3">
           {/* 标题图标 - 带脉动动画 */}
-          <div className="text-8xl mb-4 combo-pulse inline-block">⌨️</div>
-          <CardTitle className="text-4xl font-bold text-sky-600 bounce-in">
+          <div className="text-6xl mb-2 combo-pulse inline-block">⌨️</div>
+          <CardTitle className="text-3xl md:text-4xl font-bold text-sky-600 bounce-in">
             儿童打字游戏
           </CardTitle>
-          <p className="text-gray-500 mt-2 star-twinkle-bright">快乐打字，从小开始！</p>
+          <p className="text-gray-500 mt-1 star-twinkle-bright">快乐打字，从小开始！</p>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 p-4 pt-0">
           {/* 游戏模式选择 */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
@@ -102,7 +102,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                   onClick={() =>
                     setGameConfig({ mode: mode.value as 'letter' | 'word' })
                   }
-                  className={`flex-1 h-16 text-lg spring-bounce ${
+                  className={`flex-1 h-12 text-base spring-bounce ${
                     gameConfig.mode === mode.value
                       ? 'bg-sky-500 hover:bg-sky-600 button-glow'
                       : ''
@@ -200,7 +200,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             <label className="text-sm font-medium text-gray-700">
               游戏时长
             </label>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {durationOptions.map((duration) => (
                 <Button
                   key={duration.value}
@@ -208,7 +208,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                     gameConfig.duration === duration.value ? 'default' : 'outline'
                   }
                   onClick={() => setGameConfig({ duration: duration.value })}
-                  className={`flex-1 h-12 spring-bounce ${
+                  className={`h-10 spring-bounce ${
                     gameConfig.duration === duration.value
                       ? 'bg-sky-500 hover:bg-sky-600 button-glow'
                       : ''
@@ -223,7 +223,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
           {/* 开始游戏按钮 - 带强烈发光效果 */}
           <Button
             onClick={onStartGame}
-            className="w-full h-16 text-2xl font-bold bg-green-500 hover:bg-green-600 mt-6 button-glow spring-bounce cartoon-shadow"
+            className="w-full h-12 text-xl font-bold bg-green-500 hover:bg-green-600 mt-4 button-glow spring-bounce cartoon-shadow"
           >
             🎮 开始游戏
           </Button>
