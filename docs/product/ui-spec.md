@@ -209,26 +209,34 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  ⏱️ 1:45    🎯 250    🔥 连击 x7    ❤️ 正确率 92%      │ ← 顶部状态栏
+│  [⏸️ 暂停] [🏠 退出]                                    │ ← 右上角控制按钮
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  🐸 (卡通形象)                                         │ ← 起点
-│  ═══════════════════════════════════════════════        │ ← 轨道 1
-│  ═══════════════════════════════════════════════        │ ← 轨道 2
-│  ════════════════ [F]ROG ══════════════════════        │ ← 轨道 3 (当前)
-│  ═══════════════════════════════════════════════        │ ← 轨道 4
-│  ═══════════════════════════════════════════════        │ ← 轨道 5
-│                                                  🏁    │ ← 终点
+│     ☁️        🎈      ☁️        🎈      ☁️            │ ← 背景装饰
+│                                                         │
+│    ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐       │
+│    │ 🎈  │  │ 🎈  │  │ 🎈  │  │ 🎈  │  │ 🎈  │       │ ← 5 条轨道
+│    │ FR  │  │ CA  │  │ D   │  │ TR  │  │ BI  │       │   每轨道 1 个单词
+│    └─────┘  └─────┘  └─────┘  └─────┘  └─────┘       │
 │                                                         │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │  键盘提示区                                     │   │
-│  │  [Q] [W] [E] [R] [T] [Y] [U] [I] [O] [P]       │   │
-│  │   [A] [S] [D] [F] [G] [H] [J] [K] [L]          │   │
-│  │    [Z] [X] [C] [V] [B] [N] [M]                 │   │
+│  │  当前单词提示 (底部中央)                         │   │
+│  │     F**ROG**    **CA**T    **D**OG              │   │
+│  │     (已输入绿色，待输入黄色高亮)                 │   │
 │  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  云朵背景 + 星星装饰 + 主题吉祥物漂浮                   │
 ├─────────────────────────────────────────────────────────┤
-│  云朵背景，天空主题                                      │
+│  天空主题，渐变背景                                      │
 └─────────────────────────────────────────────────────────┘
 ```
+
+**设计说明**：
+- 字母/单词显示在卡通形象（气球🎈）上方，形成"卡通形象携带单词"的视觉效果
+- 5 条轨道垂直排列，每条轨道最多显示 1 个活跃单词
+- 单词沿轨道从上往下移动（进度 0%~85%）
+- 底部中央显示所有活跃单词的匹配进度
+- **移除键盘提示区**（简化界面，专注于单词匹配）
 
 ### 4.2 组件清单
 
@@ -239,11 +247,11 @@
 | Score | Display | 分数显示 |
 | Combo | Display | 连击显示 |
 | Accuracy | Display | 正确率显示 |
-| Character | Image | 卡通形象 |
-| Track | Component | 轨道容器 (5 条) |
-| FallingLetter | Component | 下落的字母/单词 |
-| KeyboardDisplay | Component | 键盘提示区 |
-| ProgressBar | Component | 单词匹配进度条 |
+| ControlButtons | Component | 暂停/退出按钮 (右上角) |
+| TrackContainer | Component | 轨道容器 (5 条垂直轨道) |
+| WordBalloon | Component | 卡通气球 + 单词组合 |
+| ActiveWordHint | Component | 底部当前单词提示 |
+| ComboOverlay | Component | 连击覆盖层 (中央) |
 
 ### 4.3 状态显示
 
@@ -252,6 +260,7 @@
 | 时间 | MM:SS | 每秒 |
 | 分数 | 数字 | 实时 |
 | 连击 | xN | 实时 |
+| WPM | 数字 | 每次输入后 |
 | 正确率 | N% | 每次输入后 |
 
 ### 4.4 交互行为
@@ -259,29 +268,56 @@
 | 元素 | 事件 | 行为 |
 |-----|------|------|
 | 键盘输入 | KeyDown | 处理字母匹配 |
-| 键盘输入 | KeyUp | 视觉反馈 |
-| 字母匹配成功 | - | 字母消失，播放音效 |
-| 字母匹配失败 | - | 字母震动变红 |
+| 字母匹配成功 | - | 已输入部分变绿色，播放音效 |
+| 字母匹配失败 | - | 单词震动变红 |
 | 时间归零 | - | 自动结束游戏 |
+| ESC 键 | KeyDown | 暂停游戏 |
+| 暂停按钮 | Click | 暂停游戏，显示暂停菜单 |
+| 退出按钮 | Click | 弹出确认对话框 |
 
 ### 4.5 视觉反馈
 
 | 事件 | 效果 | 持续时间 |
 |-----|------|---------|
-| 正确输入 | 绿色闪光 + 放大 | 0.3s |
-| 错误输入 | 红色震动 | 0.3s |
-| 连击达成 | 数字放大 + 金色 | 0.5s |
-| 字母消失 | 渐隐 + 粒子 | 0.3s |
+| 正确输入 | 已输入字母变绿色 (#22c55e) | 持续显示 |
+| 错误输入 | 单词震动 + 红色边框 | 0.3s |
+| 连击达成 (≥5) | 中央火焰图标 + 数字脉动 | 2s |
+| 连击 (≥10) | 火焰动画增强 | 持续显示 |
+| 单词匹配成功 | 渐隐 + 星星粒子 | 0.3s |
 | Miss | 灰色下沉 | 0.5s |
+| 时间警告 (<30s) | 倒计时变红色 + 闪烁 | 持续显示 |
 
-### 4.6 键盘高亮规则
+### 4.6 单词匹配进度显示
 
-| 状态 | 颜色 | 说明 |
+| 部分 | 颜色 | 说明 |
 |-----|------|------|
-| 目标键 | #4ade80 (绿色) | 当前需要输入的字母 |
-| 相邻键 | #fbbf24 (黄色) | 简单难度提示范围 |
-| 已输入 | #60a5fa (蓝色) | 单词中已匹配部分 |
-| 默认 | #e5e7eb (灰色) | 其他键位 |
+| 已输入 | #22c55e (绿色) | 已正确匹配的字母 |
+| 待输入 | #fbbf24 (黄色高亮) | 等待输入的字母 |
+| 底部提示 | #0ea5e9 (蓝色边框) | 当前活跃单词的匹配进度 |
+
+### 4.7 暂停/退出控制
+
+| 按钮 | 位置 | 行为 |
+|-----|------|------|
+| 暂停按钮 (⏸️/▶️) | 右上角 | 暂停/恢复游戏 |
+| 退出按钮 (🏠) | 右上角 (暂停右侧) | 弹出确认对话框 |
+
+### 4.8 连击覆盖层
+
+当连击 ≥ 5 时显示在屏幕中央：
+
+```
+        🔥
+       x15
+      连击!
+    ⭐ ✨ ⭐
+```
+
+| 元素 | 动画 | 说明 |
+|-----|------|------|
+| 火焰 emoji | 弹跳动画 | 连击视觉符号 |
+| 连击数字 | 脉动 + 火焰色 | 当前连击数 |
+| 星星装饰 | 闪烁动画 | 增强视觉效果 |
 
 ---
 
@@ -328,13 +364,15 @@
 | 组件名 | 类型 | 描述 |
 |-------|------|------|
 | Title | Text | "游戏结束"标题 |
-| Score | Display | 总分显示 |
+| RankEmoji | Display | 等级 Emoji (🏆/🌟/👍等) |
+| RankGrade | Display | 等级字母 (S/A/B/C/D) |
+| Score | Display | 总分显示 (带发光效果) |
 | WPM | Display | WPM 统计 |
-| Accuracy | Display | 正确率统计 |
-| Combo | Display | 最大连击统计 |
-| DetailStats | Component | 详细统计 |
+| Accuracy | Display | 正确率统计 (颜色根据值变化) |
+| Combo | Display | 最大连击统计 (带火焰动画) |
 | ReplayButton | Button | 再来一局按钮 |
 | HomeButton | Button | 返回主页按钮 |
+| CelebrationOverlay | Component | 庆祝彩带和星星装饰 |
 
 ### 5.3 交互行为
 
@@ -480,23 +518,92 @@
 ### 8.2 关键帧动画
 
 ```css
-/* 震动动画 (错误反馈) */
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-/* 跳跃动画 (正确反馈) */
-@keyframes jump {
+/* 吉祥物弹跳动画 (背景装饰) */
+@keyframes mascot-bounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+  50% { transform: translateY(-10px); }
 }
 
-/* 闪光动画 (连击) */
-@keyframes flash {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* 吉祥物漂浮动画 (背景装饰) */
+@keyframes mascot-float {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(5px, -5px); }
+  75% { transform: translate(-5px, 5px); }
+}
+
+/* 星星闪烁动画 */
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 对话框滑入动画 */
+@keyframes dialog-slide-in {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 模糊淡入动画 */
+@keyframes blur-fade-in {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; backdrop-filter: blur(4px); }
+}
+
+/* 弹入动画 */
+@keyframes bounce-in {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 弹簧弹跳动画 */
+@keyframes spring-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* 按钮发光动画 */
+@keyframes button-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+}
+
+/* 卡通阴影动画 */
+@keyframes cartoon-shadow {
+  0%, 100% { box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2); }
+  50% { box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.15); }
+}
+
+/* 连击脉动动画 */
+@keyframes combo-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 连击火焰动画 */
+@keyframes combo-fire {
+  0%, 100% { color: #f97316; text-shadow: 0 0 10px #f97316; }
+  50% { color: #fb923c; text-shadow: 0 0 20px #fb923c, 0 0 30px #f97316; }
+}
+
+/* 分数弹出动画 */
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* 字母下落浮动动画 */
+@keyframes falling-letter-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* 时间警告动画 */
+@keyframes time-warning {
+  0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+  50% { background-color: rgba(239, 68, 68, 0.3); }
 }
 ```
 

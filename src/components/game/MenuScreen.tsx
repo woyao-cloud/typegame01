@@ -1,4 +1,4 @@
-// T4.4 - 主菜单界面
+// T4.4 - 游戏配置界面
 
 'use client';
 
@@ -17,13 +17,14 @@ import { getThemeById, THEMES } from '@/data/themes';
 
 interface MenuScreenProps {
   onStartGame: () => void;
+  onBack: () => void;
 }
 
 /**
- * 主菜单界面
- * 包含：开始游戏按钮、难度选择、速度选择、模式选择
+ * 游戏配置界面
+ * 包含：游戏模式、主题、难度、速度、时长选择
  */
-export function MenuScreen({ onStartGame }: MenuScreenProps) {
+export function MenuScreen({ onStartGame, onBack }: MenuScreenProps) {
   const { gameConfig, setGameConfig, themeId } = useConfigStore();
   const [showSettings, setShowSettings] = useState(false);
   const currentTheme = getThemeById(themeId);
@@ -90,12 +91,22 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
 
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 shadow-2xl border-4 border-sky-400 relative z-10 dialog-slide-in cartoon-shadow">
         <CardHeader className="text-center pb-3">
+          {/* 返回按钮 */}
+          <div className="absolute top-4 left-4">
+            <Button
+              onClick={onBack}
+              variant="outline"
+              className="h-10 w-10 p-0 spring-bounce"
+            >
+              ←
+            </Button>
+          </div>
+
           {/* 标题图标 - 带脉动动画 */}
-          <div className="text-6xl mb-2 combo-pulse inline-block">⌨️</div>
-          <CardTitle className="text-3xl md:text-4xl font-bold text-sky-600 bounce-in">
-            儿童打字游戏
+          <div className="text-5xl mb-2 combo-pulse inline-block">⚙️</div>
+          <CardTitle className="text-2xl md:text-3xl font-bold text-sky-600 bounce-in">
+            游戏配置
           </CardTitle>
-          <p className="text-gray-500 mt-1 star-twinkle-bright">快乐打字，从小开始！</p>
         </CardHeader>
 
         <CardContent className="space-y-4 p-4 pt-0">
@@ -279,9 +290,9 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
           {/* 开始游戏按钮 - 带强烈发光效果 */}
           <Button
             onClick={onStartGame}
-            className="w-full h-12 text-xl font-bold bg-green-500 hover:bg-green-600 mt-4 button-glow spring-bounce cartoon-shadow"
+            className="w-full h-14 text-xl font-bold bg-green-500 hover:bg-green-600 mt-4 button-glow spring-bounce cartoon-shadow"
           >
-            🎮 开始游戏
+            ▶️ 开始游戏
           </Button>
 
           {/* 设置按钮 - 带弹跳效果 */}
@@ -291,7 +302,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
               variant="outline"
               className="h-10 spring-bounce"
             >
-              ⚙️ 游戏设置
+              ⚙️ 更多设置
             </Button>
           </div>
         </CardContent>

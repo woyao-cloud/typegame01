@@ -189,27 +189,35 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
               key={trackIndex}
               className={`flex-1 border-r border-sky-300/30 last:border-r-0 relative track-highlight rounded-lg`}
             >
+              {/* 轨道起点标记 */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 text-lg opacity-50">🏁</div>
+
               {/* 轨道上的单词 - 多字母模式 */}
               {(gameState.activeWords || [])
                 .filter((word) => word.track === trackIndex)
                 .map((word) => (
                   <div
                     key={word.id}
-                    className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center falling-letter-float"
+                    className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center falling-letter-float"
                     style={{
                       top: `${(word.progress / 100) * 85}%`,
                     }}
                   >
-                    {/* 吉祥物背景 */}
-                    <span className="text-6xl opacity-80">🎈</span>
-                    {/* 字母叠加在吉祥物上方 */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-3xl font-bold text-white drop-shadow-lg letter-hit">
-                        {word.text.slice(0, word.typedIndex)}
-                      </span>
-                      <span className="text-3xl font-bold text-yellow-300 drop-shadow-lg star-twinkle-bright">
-                        {word.text.slice(word.typedIndex)}
-                      </span>
+                    {/* 卡通气球容器 */}
+                    <div className="relative">
+                      {/* 气球绳子 */}
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-gradient-to-b from-sky-400 to-transparent opacity-60"></div>
+                      {/* 气球 emoji 背景 */}
+                      <span className="text-6xl opacity-90 drop-shadow-lg transform hover:scale-110 transition-transform">🎈</span>
+                      {/* 字母叠加在气球上方 */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-black text-white drop-shadow-xl letter-hit">
+                          {word.text.slice(0, word.typedIndex)}
+                        </span>
+                        <span className="text-2xl font-black text-yellow-200 drop-shadow-xl star-twinkle-bright">
+                          {word.text.slice(word.typedIndex)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -221,16 +229,35 @@ export function GameScreen({ onBackToMenu }: GameScreenProps) {
       {/* 当前单词提示 (底部中央) - 显示所有活跃单词 */}
       {gameState.activeWords.length > 0 && (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 bounce-in">
-          <div className="px-8 py-4 bg-white/95 rounded-2xl shadow-2xl border-4 border-sky-400 cartoon-shadow button-glow">
-            <div className="flex items-center gap-2 flex-wrap justify-center max-w-md">
+          <div className="px-6 py-3 bg-white/95 rounded-2xl shadow-2xl border-4 border-sky-400 cartoon-shadow button-glow">
+            <div className="text-xs text-gray-500 mb-1 text-center">当前单词</div>
+            <div className="flex items-center gap-3 flex-wrap justify-center max-w-md">
               {gameState.activeWords.map((word) => (
-                <div key={word.id} className="flex items-center gap-1">
-                  <span className="text-2xl font-bold text-green-600 drop-shadow-md">
-                    {word.text.slice(0, word.typedIndex)}
-                  </span>
-                  <span className="text-2xl font-bold text-gray-800 border-b-4 border-sky-400 star-twinkle-bright">
-                    {word.text.slice(word.typedIndex) || '_'}
-                  </span>
+                <div
+                  key={word.id}
+                  className="px-3 py-2 bg-gradient-to-r from-sky-50 to-sky-100 rounded-xl border-2 border-sky-300"
+                >
+                  <div className="flex items-baseline gap-0.5 font-mono">
+                    {/* 已输入部分 - 绿色 */}
+                    {word.text.slice(0, word.typedIndex) && (
+                      <span className="text-xl font-bold text-green-600 drop-shadow-sm">
+                        {word.text.slice(0, word.typedIndex)}
+                      </span>
+                    )}
+                    {/* 待输入部分 - 黄色高亮 */}
+                    {word.text.slice(word.typedIndex) && (
+                      <span className="text-xl font-bold text-yellow-600 bg-yellow-100 px-1 rounded star-twinkle-bright">
+                        {word.text.slice(word.typedIndex)}
+                      </span>
+                    )}
+                  </div>
+                  {/* 匹配进度条 */}
+                  <div className="mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-200"
+                      style={{ width: `${(word.typedIndex / word.text.length) * 100}%` }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
